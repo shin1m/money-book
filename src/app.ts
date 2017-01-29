@@ -1,4 +1,14 @@
-import {AfterViewInit, Component, Injectable, NgModule, QueryList, ViewChildren} from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  Directive,
+  ElementRef,
+  HostListener,
+  Injectable,
+  NgModule,
+  QueryList,
+  ViewChildren
+} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {
   ActivatedRoute,
@@ -16,11 +26,7 @@ import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/first';
 import {MaterialModule} from '@angular/material';
 import {ChartModule} from 'angular2-highcharts';
-import {
-  MoneyBookService,
-  TestMoneyBookService,
-  GoogleDriveMoneyBookService
-} from './money-book.service';
+import {MoneyBookService, GoogleDriveMoneyBookService} from './money-book.service';
 import {CanDeactivateGuard} from './can-deactivate-guard.service';
 import {MessageComponent} from './message.component';
 import {SubjectsComponent} from './subjects.component';
@@ -134,6 +140,22 @@ export class AppComponent implements AfterViewInit {
   }
 }
 
+@Directive({
+  selector: 'input[type=number]'
+})
+export class EdgeInputNumberDirective {
+  constructor(private element: ElementRef) {}
+  @HostListener('keydown', ['$event']) onKeyDown(event: KeyboardEvent) {
+    if (navigator.userAgent.indexOf('Edge/') < 0) return;
+    switch (event.which) {
+    case 38:
+    case 40:
+      setTimeout(() => this.element.nativeElement.dispatchEvent(new Event('change')), 0)
+      break;
+    }
+  }
+}
+
 @NgModule({
   imports: [
     FormsModule,
@@ -189,14 +211,14 @@ export class AppComponent implements AfterViewInit {
     ImportCSVComponent,
     ExportCSVComponent,
     SignInComponent,
+    EdgeInputNumberDirective,
     AppComponent
   ],
   entryComponents: [
     SelectSubjectsDialog
   ],
   providers: [
-    {provide: MoneyBookService, useClass: TestMoneyBookService},
-    //{provide: MoneyBookService, useClass: GoogleDriveMoneyBookService},
+    {provide: MoneyBookService, useClass: GoogleDriveMoneyBookService},
     AuthGuard,
     CanDeactivateGuard
   ],
