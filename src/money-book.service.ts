@@ -49,29 +49,33 @@ export abstract class MoneyBookService {
 @Injectable()
 export class TestMoneyBookService extends MoneyBookService {
   subjects: Subject[];
-  items: {[month: string]: Item[][]};
+  items: {[month: string]: Item[][]} = {};
   constructor() {
     super();
     this.subjects = [
-      {id: 1, name: 'subject 1', source: 'a', destination: '', revoked: false},
-      {id: 2, name: 'subject 2', source: 'b', destination: '', revoked: false},
-      {id: 3, name: 'subject 3', source: '', destination: 'a', revoked: false},
-      {id: 4, name: 'subject 4', source: '', destination: 'b', revoked: false}
+      {id: 1, name: 'Cash', source: 'a', destination: '', revoked: false},
+      {id: 2, name: 'Deposit', source: 'b', destination: '', revoked: false},
+      {id: 3, name: 'Foods', source: '', destination: 'a', revoked: false},
+      {id: 4, name: 'Others', source: '', destination: 'b', revoked: false}
     ];
-    const items: any[] = [];
-    items[1] = [
-      {source: 1, destination: 2, amount: 100, description: 'item 1'},
-      {source: 1, destination: 2, amount: 200, description: 'item 2'}
-    ];
-    items[2] = [
-      {source: 1, destination: 3, amount: 300, description: 'item 3'}
-    ];
-    items[3] = [
-      {source: 4, destination: 1, amount: 400, description: 'item 4'}
-    ];
-    this.items = {
-      '201612': items
-    };
+    const date = new Date();
+    date.setDate(1);
+    date.setHours(0, 0, 0, 0);
+    date.setMonth(date.getMonth() + 1);
+    const end = new Date(date.getTime());
+    date.setFullYear(date.getFullYear() - 1);
+    while (date.getTime() < end.getTime()) {
+      const items: Item[] = [];
+      const n = Math.floor(Math.random() * 5);
+      for (let i = 0; i < n; ++i) items.push({
+        source: Math.random() < 0.9 ? 1 : 2,
+        destination: Math.random() < 0.7 ? 3 : 4,
+        amount: Math.floor(Math.random() * 10000),
+        description: ''
+      });
+      this._putItems(date, items);
+      date.setDate(date.getDate() + 1);
+    }
     setTimeout(() => this.isSignedIn.next(false), 1000);
   }
   sign(which: string) {
@@ -110,12 +114,15 @@ export class TestMoneyBookService extends MoneyBookService {
       resolve(JSON.parse(JSON.stringify(items ? items : [])) as Item[]);
     }, 1000));
   }
+  private _putItems(date: Date, items: Item[]) {
+    const key = this.toMonth(date);
+    let monthly = this.items[key];
+    if (!monthly) this.items[key] = monthly = [];
+    monthly[date.getDate()] = <Item[]>JSON.parse(JSON.stringify(items));
+  }
   putItems(date: Date, items: Item[]) {
     return new Promise<void>(resolve => setTimeout(() => {
-      const key = this.toMonth(date);
-      let monthly = this.items[key];
-      if (!monthly) this.items[key] = monthly = [];
-      monthly[date.getDate()] = <Item[]>JSON.parse(JSON.stringify(items));
+      this._putItems(date, items);
       resolve();
     }, 1000));
   }
