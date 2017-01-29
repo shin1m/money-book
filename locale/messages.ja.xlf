@@ -144,7 +144,7 @@
       </trans-unit>
       <trans-unit id="6ffd71eda225c5d971b1fef21df03c06b41ba8a3" datatype="html">
         <source>Items</source>
-        <target>項目一覧</target>
+        <target>項目入力</target>
       </trans-unit>
       <trans-unit id="2b689ed7a24edd60660708e03c2dc11cd540e950" datatype="html">
         <source>Subjects</source>
