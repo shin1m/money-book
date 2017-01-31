@@ -146,7 +146,7 @@ export class TestMoneyBookService extends MoneyBookService {
 
 function tryOrBackoff<T>(action: () => Promise<T>, delay: number): Promise<T> {
   return action().then(undefined, x => {
-    if (!x.result || !x.result.error.errors.some((x: any) => x.reason.match(/(userR|r)ateLimitExceeded/))) return Promise.reject(x);
+    if (!x.result || x.result.code !== 500 && !x.result.error.errors.some((x: any) => x.reason.match(/(userR|r)ateLimitExceeded/))) return Promise.reject(x);
     delay *= 2;
     return new Promise<T>(resolve => setTimeout(() => resolve(tryOrBackoff(action, delay)), delay));
   });
