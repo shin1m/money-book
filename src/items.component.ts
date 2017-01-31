@@ -36,6 +36,9 @@ export class SelectSubjectComponent {
     <div class="centerable">
       <ng-container *ngIf="subjects && items">
         <md-toolbar>
+          <button md-icon-button [disabled]="modified" (click)="date = date - 1" i18n-mdTooltip mdTooltip="Previous day">
+            <md-icon>chevron_left</md-icon>
+          </button>
           <md-input-container>
             <input md-input [disabled]="modified" [(ngModel)]="year" type="number" class="year" required>
           </md-input-container>
@@ -45,6 +48,9 @@ export class SelectSubjectComponent {
           <md-input-container>
             <input md-input [disabled]="modified" [(ngModel)]="date" type="number" class="date" required>
           </md-input-container>
+          <button md-icon-button [disabled]="modified" (click)="date = date + 1" i18n-mdTooltip mdTooltip="Next day">
+            <md-icon>chevron_right</md-icon>
+          </button>
           <span class="app-toolbar-filler"></span>
           <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
             <md-icon>done</md-icon>
@@ -123,15 +129,15 @@ export class SelectSubjectComponent {
   `,
   styles: [`
     input.year {
-      width: 4em;
+      width: 3em;
       text-align: right;
     }
     input.month {
-      width: 3em;
+      width: 2em;
       text-align: right;
     }
     input.date {
-      width: 3em;
+      width: 2em;
       text-align: right;
     }
     table.source {

@@ -70,6 +70,14 @@
         <source>Add new subject</source>
         <target>新しい費目を追加</target>
       </trans-unit>
+      <trans-unit id="68149b3e5c8377f1741b76e87802ed3efbe6e332" datatype="html">
+        <source>Previous day</source>
+        <target>前日</target>
+      </trans-unit>
+      <trans-unit id="fd78c797e104e0add29b5df28716bde3e726f6ef" datatype="html">
+        <source>Next day</source>
+        <target>翌日</target>
+      </trans-unit>
       <trans-unit id="6834fa6b43d1ecbdf147c48dd9c4d72f1484571d" datatype="html">
         <source>Source</source>
         <target>元</target>
@@ -118,6 +126,14 @@
         <source>Monthly Totals</source>
         <target>月別集計</target>
       </trans-unit>
+      <trans-unit id="c3b08b07b5ab98e7cdcf18df39355690ab7d3884" datatype="html">
+        <source>Previous month</source>
+        <target>前月</target>
+      </trans-unit>
+      <trans-unit id="4bd046985cfe13040d5ef0cd881edce0968a111a" datatype="html">
+        <source>Next month</source>
+        <target>翌月</target>
+      </trans-unit>
       <trans-unit id="121cc5391cd2a5115bc2b3160379ee5b36cd7716" datatype="html">
         <source>Settings</source>
         <target>設定</target>
@@ -161,6 +177,10 @@
       <trans-unit id="640eec093c685babaa3265137215e3cc92ad704d" datatype="html">
         <source>Sign Out</source>
         <target>サインアウト</target>
+      </trans-unit>
+      <trans-unit id="ba4f24bf9bf3dc4db3d6bc1b8b63339295f0b806" datatype="html">
+        <source>Sign In</source>
+        <target>サインイン</target>
       </trans-unit>
     </body>
   </file>

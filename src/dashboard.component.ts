@@ -70,12 +70,18 @@ export class SelectSubjectsDialog {
     <div class="centerable">
       <div *ngIf="sources">
         <md-toolbar>
+          <button md-icon-button [disabled]="modified" (click)="month = month - 1" i18n-mdTooltip mdTooltip="Previous month">
+            <md-icon>chevron_left</md-icon>
+          </button>
           <md-input-container>
             <input md-input [(ngModel)]="year" type="number" class="year" required>
           </md-input-container>
           <md-input-container>
             <input md-input [(ngModel)]="month" type="number" class="month" required>
           </md-input-container>
+          <button md-icon-button [disabled]="modified" (click)="month = month + 1" i18n-mdTooltip mdTooltip="Next month">
+            <md-icon>chevron_right</md-icon>
+          </button>
           <span class="app-toolbar-filler"></span>
           <button md-icon-button (click)="settings()" i18n-mdTooltip mdTooltip="Settings">
             <md-icon>settings</md-icon>
@@ -91,11 +97,11 @@ export class SelectSubjectsDialog {
       display: block;
     }
     input.year {
-      width: 4em;
+      width: 3em;
       text-align: right;
     }
     input.month {
-      width: 3em;
+      width: 2em;
       text-align: right;
     }
   `]
@@ -135,7 +141,7 @@ export class DashboardComponent implements OnInit {
   }
   @ViewChild('chart') chart: any;
   @HostListener('window:resize') resize() {
-    this.chart.chart.reflow();
+    if (this.chart.chart) this.chart.chart.reflow();
   }
   private load(month: Date) {
     const months: Date[] = [];

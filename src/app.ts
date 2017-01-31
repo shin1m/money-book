@@ -98,9 +98,9 @@ declare var gapi: any;
         <a md-button (click)="signOut()" i18n>Sign Out</a>
       </md-toolbar>
       <div class="app-content">
-        <div class="mb-signin2" [hidden]="service.isSignedIn | async">
+        <div class="mb-signin2" [hidden]="(service.isSignedIn | async) !== false">
           <div id="mb-signin2">
-            <button md-raised-button (click)="service.sign('In')">Sign In</button>
+            <button md-raised-button (click)="service.sign('In')" i18n>Sign In</button>
           </div>
         </div>
         <router-outlet></router-outlet>
@@ -131,7 +131,7 @@ export class AppComponent implements AfterViewInit {
     });
   }
   ngAfterViewInit() {
-    this.service.isSignedIn.first(x => x === false).subscribe(x => gapi.signin2.render('mb-signin2'));
+    if (typeof gapi !== 'undefined') this.service.isSignedIn.first(x => x === false).subscribe(x => gapi.signin2.render('mb-signin2'));
   }
   signOut() {
     this.router.navigate(['/signin']).then(x => {
