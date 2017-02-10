@@ -27,10 +27,10 @@ System.config({
     '@angular/router/testing': 'npm:@angular/router/bundles/router-testing.umd.js',
 
     'rxjs': 'npm:rxjs',
-    'typescript': 'npm:typescript@2.1.5/lib/typescript.js',
+    'typescript': 'npm:typescript@2.1.6/lib/typescript.js',
 
     '@angular/material': 'npm:@angular/material/bundles/material.umd.js',
-    'angular2-highcharts': 'https://cdn.rawgit.com/gevgeny/angular2-highcharts/v0.4.1/dist', 
+    'angular2-highcharts': 'https://cdn.rawgit.com/gevgeny/angular2-highcharts/v0.4.3/dist',
     'highcharts': 'https://cdn.rawgit.com/highcharts/highcharts-dist/v5.0.2/highstock.js',
 
     text: 'systemjs-text-plugin.js'
