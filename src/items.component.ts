@@ -1,11 +1,24 @@
-import {Component, EventEmitter, Input, OnInit, Output, QueryList, ViewChildren} from '@angular/core';
+import {
+  Component,
+  DoCheck,
+  ElementRef,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
 import {Observable} from 'rxjs/Observable';
+import {Subscription} from 'rxjs/Subscription';
 import {Subject as RxSubject} from 'rxjs/Subject';
+import 'rxjs/add/observable/fromEvent';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
-import {MdSnackBar} from '@angular/material';
+import {MdSelect, MdSnackBar} from '@angular/material';
 import {Subject, sortSubjects, Item, MoneyBookService} from './money-book.service';
 import {CanComponentDeactivate} from './can-deactivate-guard.service';
 import {MessageComponent} from './message.component';
@@ -13,18 +26,52 @@ import {MessageComponent} from './message.component';
 @Component({
   selector: 'mb-select-subject',
   template: `
-    <md-select [ngModel]="selected" (ngModelChange)="selected = $event; selectedChange.emit($event)">
+    <md-select [ngModel]="selected" (ngModelChange)="select($event)">
       <md-option *ngFor="let subject of subjects" [value]="subject.id">
         {{subject[mnemonic]}} {{subject.name}}
       </md-option>
     </md-select>
   `
 })
-export class SelectSubjectComponent {
+export class SelectSubjectComponent implements OnInit {
+  @ViewChild(MdSelect) mdSelect: MdSelect;
   @Input() subjects: Subject[];
   @Input() mnemonic: string;
   @Input() selected: number;
   @Output() selectedChange = new EventEmitter<number>();
+  @Output() commit = new EventEmitter<void>();
+  private keydowns: Subscription;
+  private find(key: string) {
+    key = key.toLowerCase();
+    return this.mdSelect.options.find(x => x.viewValue.toLowerCase().startsWith(key));
+  }
+  constructor(private element: ElementRef) {}
+  ngOnInit() {
+    Observable.fromEvent(this.element.nativeElement, 'keydown', true).subscribe((x: KeyboardEvent) => {
+      if (x.key === 'Enter') {
+        x.stopPropagation();
+        this.commit.emit();
+      } else {
+        const option = this.find(x.key);
+        if (option) option.select();
+        this.select(this.mdSelect.selected.value);
+      }
+    });
+    this.mdSelect.overlayDir.attach.subscribe(() => {
+      this.keydowns = Observable.fromEvent(this.mdSelect.overlayDir.overlayRef.overlayElement, 'keydown').subscribe((x: KeyboardEvent) => {
+        const option = this.find(x.key);
+        if (option) option.focus();
+      });
+    });
+    this.mdSelect.overlayDir.detach.subscribe(() => this.keydowns.unsubscribe());
+  }
+  select(value: number) {
+    this.selected = value;
+    this.selectedChange.emit(value);
+  }
+  focus() {
+    this.mdSelect.close();
+  }
 }
 
 @Component({
@@ -34,7 +81,7 @@ export class SelectSubjectComponent {
     <mb-message name="failed" i18n>Failed</mb-message>
     <mb-message name="close" i18n>Close</mb-message>
     <div class="centerable">
-      <ng-container *ngIf="subjects && items">
+      <ng-container *ngIf="subjects">
         <md-toolbar>
           <button md-icon-button [disabled]="modified" (click)="date = date - 1" i18n-mdTooltip mdTooltip="Previous day">
             <md-icon>chevron_left</md-icon>
@@ -67,8 +114,8 @@ export class SelectSubjectComponent {
             </td>
             <td>
               <md-chip-list>
-                <md-chip *ngFor="let summary of summaries" [selected]="summary.id === source">
-                  {{summary.name}} {{summary.count}}
+                <md-chip *ngFor="let summary of summaries" [selected]="summary.subject.id === source">
+                  {{summary.subject.name}} {{summary.count}}
                 </md-chip>
               </md-chip-list>
             </td>
@@ -97,23 +144,23 @@ export class SelectSubjectComponent {
               </md-input-container>
             </td>
             <td>
-              <button md-icon-button (click)="remove(item)" i18n-mdTooltip mdTooltip="Delete this item">
+              <button *ngIf="item.source" md-icon-button (click)="remove(item)" i18n-mdTooltip mdTooltip="Delete this item">
                 <md-icon>delete</md-icon>
               </button>
             </td>
           </tr>
           <tr>
             <td>
-              <mb-select-subject [subjects]="destinations" mnemonic="destination" [(selected)]="newItem.destination"></mb-select-subject>
+              <mb-select-subject [subjects]="destinations" mnemonic="destination" [(selected)]="newItem.destination" (commit)="newDestinationCommit()" #newDestination></mb-select-subject>
             </td>
-            <td>
+            <td (keydown)="newAmountKeydown($event.key)">
               <md-input-container>
-                <input md-input [(ngModel)]="newItem.amount" type="number" required i18n-placeholder placeholder="New" class="amount" #amount="ngModel">
+                <input md-input [(ngModel)]="newItem.amount" type="number" required i18n-placeholder placeholder="New" class="amount" #amount="ngModel" #newAmount>
               </md-input-container>
             </td>
-            <td>
+            <td (keydown)="newDescriptionKeydown($event.key)">
               <md-input-container>
-                <input md-input [(ngModel)]="newItem.description" required>
+                <input md-input [(ngModel)]="newItem.description" #newDescription>
               </md-input-container>
             </td>
             <td>
@@ -154,21 +201,29 @@ export class SelectSubjectComponent {
     }
   `]
 })
-export class ItemsComponent implements OnInit, CanComponentDeactivate {
+export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
   private name2message: {[name: string]: string} = {};
   @ViewChildren(MessageComponent) set messages(values: QueryList<MessageComponent>) {
     values.forEach(x => this.name2message[x.name] = x.value);
   }
+  @ViewChild('newDestination') newDestination: SelectSubjectComponent;
+  @ViewChild('newAmount') newAmount: ElementRef;
+  @ViewChild('newDescription') newDescription: ElementRef;
   waiting = true;
   subjects: {[id: number]: Subject};
-  sources: Subject[];
+  sources: Subject[] = [];
   destinations: Subject[];
   private _date = new Date();
   private targetDates = new RxSubject<number>();
-  items: Item[];
-  private original: string;
-  newItem: Item;
+  items: Item[] = [];
+  private original = '[]';
+  newItem = new Item();
   source: number;
+  itemsOfSource: Item[];
+  summaries: {subject: Subject, count: number}[];
+  modified: boolean;
+  invalid: boolean;
+  private modifieds = new RxSubject<boolean>();
   constructor(private service: MoneyBookService, private snackBar: MdSnackBar) {
     this._date.setHours(0, 0, 0, 0);
   }
@@ -181,6 +236,9 @@ export class ItemsComponent implements OnInit, CanComponentDeactivate {
       this.original = JSON.stringify(this.items);
       this.waiting = false;
     });
+    this.modifieds.debounceTime(3000).filter(x => x).subscribe(x => {
+      if (!this.waiting && this.modified && !this.invalid) this.save();
+    });
     this.service.getSubjects().then(x => {
       this.subjects = [];
       x.forEach(x => this.subjects[x.id] = x);
@@ -191,18 +249,22 @@ export class ItemsComponent implements OnInit, CanComponentDeactivate {
       this.load();
     });
   }
+  ngDoCheck() {
+    this.itemsOfSource = this.items.filter(x => x.source === this.source);
+    this.summaries = this.sources.map(subject => ({
+      subject: subject,
+      count: this.items.filter(x => x.source === subject.id).length
+    })).filter(x => x.count > 0);
+    this.modified = JSON.stringify(this.items) !== this.original;
+    this.invalid = this.items.some(x => typeof x.amount !== 'number') || typeof this.newItem.amount === 'number' || !!this.newItem.description;
+    this.modifieds.next(this.modified);
+  }
   canDeactivate() {
     return !this.modified || confirm(this.name2message['confirm']);
   }
   private setNewItem() {
     this.newItem = new Item();
     this.newItem.destination = this.destinations[0].id;
-  }
-  get modified() {
-    return JSON.stringify(this.items) !== this.original;
-  }
-  get invalid() {
-    return this.items.some(x => typeof x.amount !== 'number');
   }
   private load() {
     this.waiting = true;
@@ -227,7 +289,7 @@ export class ItemsComponent implements OnInit, CanComponentDeactivate {
     if (this.canDeactivate()) this.load();
   }
   private setDate(value: Date) {
-    if (value === this._date) return;
+    if (value.getTime() === this._date.getTime()) return;
     this._date = value;
     this.targetDates.next(this._date.getTime());
   }
@@ -249,17 +311,6 @@ export class ItemsComponent implements OnInit, CanComponentDeactivate {
   set date(value: number) {
     this.setDate(new Date(this.year, this.month - 1, value));
   }
-  get itemsOfSource() {
-    return this.items.filter(x => x.source === this.source);
-  }
-  get summaries() {
-    const summaries: {id: number, name: string, count: number}[] = [];
-    this.sources.forEach(subject => {
-      const count = this.items.filter(x => x.source === subject.id).length;
-      if (count > 0) summaries.push({id: subject.id, name: subject.name, count: count});
-    });
-    return summaries;
-  }
   add() {
     this.newItem.source = this.source;
     this.items.push(this.newItem);
@@ -267,5 +318,17 @@ export class ItemsComponent implements OnInit, CanComponentDeactivate {
   }
   remove(item: Item) {
     this.items.splice(this.items.indexOf(item), 1);
+  }
+  newDestinationCommit() {
+    setTimeout(() => this.newAmount.nativeElement.focus(), 0);
+  }
+  newAmountKeydown(key: string) {
+    if (typeof this.newItem.amount !== 'number' || key !== 'Enter') return;
+    setTimeout(() => this.newDescription.nativeElement.focus(), 0);
+  }
+  newDescriptionKeydown(key: string) {
+    if (typeof this.newItem.amount !== 'number' || key !== 'Enter') return;
+    this.add();
+    setTimeout(() => this.newDestination.focus(), 0);
   }
 }
