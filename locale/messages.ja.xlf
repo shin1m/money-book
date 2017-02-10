@@ -20,7 +20,7 @@
       </trans-unit>
       <trans-unit id="d9bee8b25c580414601971ad893de8b727ac0383" datatype="html">
         <source>Include Revoked</source>
-        <target>無効済を含める</target>
+        <target>破棄済を含める</target>
       </trans-unit>
       <trans-unit id="52c9a103b812f258bcddc3d90a6e3f46871d25fe" datatype="html">
         <source>Save</source>
