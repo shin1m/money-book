@@ -26,7 +26,7 @@ import {MessageComponent} from './message.component';
 @Component({
   selector: 'mb-select-subject',
   template: `
-    <md-select [ngModel]="selected" (ngModelChange)="select($event)">
+    <md-select [ngModel]="selected" (ngModelChange)="select($event)" (onClose) ="commit.emit()">
       <md-option *ngFor="let subject of subjects" [value]="subject.id">
         {{subject[mnemonic]}} {{subject.name}}
       </md-option>
