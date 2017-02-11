@@ -3,7 +3,7 @@
   <head>
   <meta http-equiv="refresh" content="0;URL=/money-book">
   <script>
-    var match = location.pathname.match(/^/money-book/\w+//);
+    var match = location.pathname.match(/^\/money-book\/\w+\//);
     if (match) {
       sessionStrage.redirect = location.href;
       document.getElementsByTagName('meta')[0].setAttribute('content', '0;URL=' + match[0]);
