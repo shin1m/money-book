@@ -30,8 +30,8 @@ System.config({
     'typescript': 'npm:typescript@2.1.6/lib/typescript.js',
 
     '@angular/material': 'npm:@angular/material/bundles/material.umd.js',
-    'angular2-highcharts': 'https://cdn.rawgit.com/gevgeny/angular2-highcharts/v0.4.3/dist',
-    'highcharts': 'https://cdn.rawgit.com/highcharts/highcharts-dist/v5.0.2/highstock.js',
+    'angular2-highcharts': 'npm:angular2-highcharts/dist',
+    'highcharts': 'npm:highcharts/highcharts.js',
 
     text: 'systemjs-text-plugin.js'
   },
