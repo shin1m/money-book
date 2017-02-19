@@ -30,7 +30,7 @@
     "@angular/platform-server": "~2.4",
     "@angular/router": "~3.4",
     "angular-in-memory-web-api": "~0.2",
-    "angular2-highcharts": "~0.4",
+    "angular2-highcharts": "~0",
     "core-js": "~2.4",
     "rxjs": "~5.0",
     "systemjs": "~0.19",

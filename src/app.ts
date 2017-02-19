@@ -25,6 +25,7 @@ import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/first';
 import {MaterialModule} from '@angular/material';
+import {HighchartsStatic} from 'angular2-highcharts/dist/HighchartsService';
 import {ChartModule} from 'angular2-highcharts';
 import {MoneyBookService, GoogleDriveMoneyBookService} from './money-book.service';
 import {CanDeactivateGuard} from './can-deactivate-guard.service';
@@ -81,7 +82,7 @@ declare var gapi: any;
     <mb-message name="subjects" i18n>Subjects</mb-message>
     <mb-message name="importcsv" i18n>Import CSV</mb-message>
     <mb-message name="exportcsv" i18n>Export CSV</mb-message>
-    <md-sidenav-layout>
+    <md-sidenav-container>
       <md-sidenav #sidenav class="app-sidenav">
         <md-nav-list (click)="sidenav.close()">
           <a *ngFor="let item of menu" md-list-item [routerLink]="'/' + item.name" routerLinkActive="active">
@@ -105,7 +106,7 @@ declare var gapi: any;
         </div>
         <router-outlet></router-outlet>
       </div>
-    </md-sidenav-layout>
+    </md-sidenav-container>
   `,
   styles: [`
     div.mb-signin2 {
@@ -156,10 +157,20 @@ export class EdgeInputNumberDirective {
   }
 }
 
+export function highchartsFactory() {
+  const highcharts = require('highcharts');
+  require('highcharts/modules/drilldown')(highcharts);
+  return highcharts;
+}
+
 @NgModule({
   imports: [
     FormsModule,
     BrowserModule,
+    /*ChartModule.forRoot(
+      require('highcharts'),
+      require('highcharts/modules/drilldown')
+    ),*/
     ChartModule,
     RouterModule.forRoot([
       {
@@ -199,7 +210,7 @@ export class EdgeInputNumberDirective {
         pathMatch: 'full'
       }
     ]),
-    MaterialModule.forRoot()
+    MaterialModule
   ],
   declarations: [
     MessageComponent,
@@ -218,6 +229,7 @@ export class EdgeInputNumberDirective {
     SelectSubjectsDialog
   ],
   providers: [
+    {provide: HighchartsStatic, useFactory: highchartsFactory},
     {provide: MoneyBookService, useClass: GoogleDriveMoneyBookService},
     AuthGuard,
     CanDeactivateGuard

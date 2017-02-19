@@ -87,13 +87,13 @@ export class SelectSubjectComponent implements OnInit {
             <md-icon>chevron_left</md-icon>
           </button>
           <md-input-container>
-            <input md-input [disabled]="modified" [(ngModel)]="year" type="number" class="year" required>
+            <input mdInput [disabled]="modified" [(ngModel)]="year" type="number" class="year" required>
           </md-input-container>
           <md-input-container>
-            <input md-input [disabled]="modified" [(ngModel)]="month" type="number" class="month" required>
+            <input mdInput [disabled]="modified" [(ngModel)]="month" type="number" class="month" required>
           </md-input-container>
           <md-input-container>
-            <input md-input [disabled]="modified" [(ngModel)]="date" type="number" class="date" required>
+            <input mdInput [disabled]="modified" [(ngModel)]="date" type="number" class="date" required>
           </md-input-container>
           <button md-icon-button [disabled]="modified" (click)="date = date + 1" i18n-mdTooltip mdTooltip="Next day">
             <md-icon>chevron_right</md-icon>
@@ -134,13 +134,13 @@ export class SelectSubjectComponent implements OnInit {
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="item.amount" type="number" required class="amount" #amount="ngModel">
+                <input mdInput [(ngModel)]="item.amount" type="number" required class="amount" #amount="ngModel">
                 <div [hidden]="!amount.invalid" class="error" i18n>Required</div>
               </md-input-container>
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="item.description">
+                <input mdInput [(ngModel)]="item.description">
               </md-input-container>
             </td>
             <td>
@@ -155,12 +155,12 @@ export class SelectSubjectComponent implements OnInit {
             </td>
             <td (keydown)="newAmountKeydown($event.key)">
               <md-input-container>
-                <input md-input [(ngModel)]="newItem.amount" type="number" required i18n-placeholder placeholder="New" class="amount" #amount="ngModel" #newAmount>
+                <input mdInput [(ngModel)]="newItem.amount" type="number" required i18n-placeholder placeholder="New" class="amount" #amount="ngModel" #newAmount>
               </md-input-container>
             </td>
             <td (keydown)="newDescriptionKeydown($event.key)">
               <md-input-container>
-                <input md-input [(ngModel)]="newItem.description" #newDescription>
+                <input mdInput [(ngModel)]="newItem.description" #newDescription>
               </md-input-container>
             </td>
             <td>

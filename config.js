@@ -1,13 +1,26 @@
 System.config({
-  transpiler: 'typescript',
+  transpiler: 'ts',
   typescriptOptions: {
-    emitDecoratorMetadata: true
+    target: 'es5',
+    module: 'commonjs',
+    moduleResolution: 'node',
+    sourceMap: true,
+    emitDecoratorMetadata: true,
+    experimentalDecorators: true,
+    lib: ['es2015', 'dom'],
+    noImplicitAny: true,
+    suppressImplicitAnyIndexErrors: true
+  },
+  meta: {
+    typescript: {
+      exports: 'ts'
+    }
   },
   paths: {
     'npm:': 'https://unpkg.com/'
   },
   map: {
-    'app': './src',
+    'app': 'src',
 
     '@angular/core': 'npm:@angular/core/bundles/core.umd.js',
     '@angular/common': 'npm:@angular/common/bundles/common.umd.js',
@@ -27,11 +40,13 @@ System.config({
     '@angular/router/testing': 'npm:@angular/router/bundles/router-testing.umd.js',
 
     'rxjs': 'npm:rxjs',
+    'ts': 'npm:plugin-typescript@5.2.7/lib/plugin.js',
     'typescript': 'npm:typescript@2.1.6/lib/typescript.js',
 
     '@angular/material': 'npm:@angular/material/bundles/material.umd.js',
     'angular2-highcharts': 'npm:angular2-highcharts/dist',
-    'highcharts': 'npm:highcharts/highcharts.js',
+    'angular2-highcharts/dist/HighchartsService': 'npm:angular2-highcharts/dist/HighchartsService',
+    'highcharts': 'npm:highcharts',
 
     text: 'systemjs-text-plugin.js'
   },
@@ -41,6 +56,10 @@ System.config({
       defaultExtension: 'ts'
     },
     rxjs: {
+      defaultExtension: 'js'
+    },
+    highcharts: {
+      main: './highcharts.js',
       defaultExtension: 'js'
     },
     'angular2-highcharts': {

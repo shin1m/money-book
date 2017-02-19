@@ -38,18 +38,18 @@ import {MessageComponent} from './message.component';
             <!-- <td>{{subject.id}}</td> -->
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="subject.name" required #name="ngModel">
+                <input mdInput [(ngModel)]="subject.name" required #name="ngModel">
                 <div [hidden]="!name.invalid" class="error" i18n>Required</div>
               </md-input-container>
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="subject.source" class="mnemonic">
+                <input mdInput [(ngModel)]="subject.source" class="mnemonic">
               </md-input-container>
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="subject.destination" class="mnemonic">
+                <input mdInput [(ngModel)]="subject.destination" class="mnemonic">
               </md-input-container>
             </td>
             <td *ngIf="includeRevoked">
@@ -68,17 +68,17 @@ import {MessageComponent} from './message.component';
             <!-- <td>New</td> -->
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="newSubject.name" required i18n-placeholder placeholder="New" #name="ngModel">
+                <input mdInput [(ngModel)]="newSubject.name" required i18n-placeholder placeholder="New" #name="ngModel">
               </md-input-container>
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="newSubject.source" class="mnemonic">
+                <input mdInput [(ngModel)]="newSubject.source" class="mnemonic">
               </md-input-container>
             </td>
             <td>
               <md-input-container>
-                <input md-input [(ngModel)]="newSubject.destination" class="mnemonic">
+                <input mdInput [(ngModel)]="newSubject.destination" class="mnemonic">
               </md-input-container>
             </td>
             <td *ngIf="includeRevoked"></td>
