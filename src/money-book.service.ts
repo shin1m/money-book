@@ -26,10 +26,6 @@ export class Item {
   constructor() {}
 }
 
-export interface Series {
-  [subject: number]: number[];
-}
-
 @Injectable()
 export abstract class MoneyBookService {
   isSignedIn = new BehaviorSubject<null | boolean>(null);
@@ -43,30 +39,31 @@ export abstract class MoneyBookService {
   abstract getAllItems(): Promise<{date: string, items: Item[]}[]>;
   abstract getItems(date: Date): Promise<Item[]>;
   abstract putItems(date: Date, items: Item[]): Promise<void>;
-  abstract getMonthlyTotals(months: Date[], sources: {[id: number]: boolean}, destinations: {[id: number]: boolean}): Promise<[Series, Series]>;
+  abstract getAllItemsPerMonth(months: Date[]): Promise<Item[][][]>;
 }
 
 @Injectable()
 export class TestMoneyBookService extends MoneyBookService {
-  subjects: Subject[];
-  items: {[month: string]: Item[][]} = {};
+  subjects: string;
+  items: {[month: string]: string[]} = {};
   constructor() {
     super();
-    this.subjects = [
+    this.subjects = JSON.stringify([
       {id: 1, name: 'Cash', source: 'a', destination: '', revoked: false},
       {id: 2, name: 'Deposit', source: 'b', destination: '', revoked: false},
       {id: 3, name: 'Foods', source: '', destination: 'a', revoked: false},
       {id: 4, name: 'Others', source: '', destination: 'b', revoked: false}
-    ];
+    ]);
     const date = new Date();
     date.setDate(1);
     date.setHours(0, 0, 0, 0);
     date.setMonth(date.getMonth() + 1);
     const end = new Date(date.getTime());
     date.setFullYear(date.getFullYear() - 1);
-    while (date.getTime() < end.getTime()) {
-      const items: Item[] = [];
+    for (; date.getTime() < end.getTime(); date.setDate(date.getDate() + 1)) {
       const n = Math.floor(Math.random() * 5);
+      if (n <= 0) continue;
+      const items: Item[] = [];
       for (let i = 0; i < n; ++i) items.push({
         source: Math.random() < 0.9 ? 1 : 2,
         destination: Math.random() < 0.7 ? 3 : 4,
@@ -74,7 +71,6 @@ export class TestMoneyBookService extends MoneyBookService {
         description: ''
       });
       this._putItems(date, items);
-      date.setDate(date.getDate() + 1);
     }
     setTimeout(() => this.isSignedIn.next(false), 1000);
   }
@@ -83,12 +79,12 @@ export class TestMoneyBookService extends MoneyBookService {
   }
   getSubjects() {
     return new Promise(resolve => setTimeout(() => {
-      resolve(JSON.parse(JSON.stringify(this.subjects)) as Subject[]);
+      resolve(<Subject[]>JSON.parse(this.subjects));
     }, 1000));
   }
   putSubjects(subjects: Subject[]) {
     return new Promise<void>(resolve => setTimeout(() => {
-      this.subjects = JSON.parse(JSON.stringify(subjects)) as Subject[];
+      this.subjects = JSON.stringify(subjects);
       resolve();
     }, 1000));
   }
@@ -101,24 +97,23 @@ export class TestMoneyBookService extends MoneyBookService {
       const items: any[] = [];
       months.forEach(x => this.items[x].forEach((y, i) => items.push({
         date: x + pad(i),
-        items: JSON.parse(JSON.stringify(y)) as Item[]
+        items: <Item[]>JSON.parse(y)
       })));
       resolve(items);
     }, 1000));
   }
   getItems(date: Date) {
     return new Promise(resolve => setTimeout(() => {
-      let x = this.items[this.toMonth(date)];
-      if (!x) x = [];
-      const items = x[date.getDate()];
-      resolve(JSON.parse(JSON.stringify(items ? items : [])) as Item[]);
+      const daily = this.items[this.toMonth(date)];
+      const items = (daily ? daily : [])[date.getDate()];
+      resolve(items ? <Item[]>JSON.parse(items) : []);
     }, 1000));
   }
   private _putItems(date: Date, items: Item[]) {
     const key = this.toMonth(date);
-    let monthly = this.items[key];
-    if (!monthly) this.items[key] = monthly = [];
-    monthly[date.getDate()] = <Item[]>JSON.parse(JSON.stringify(items));
+    let daily = this.items[key];
+    if (!daily) this.items[key] = daily = [];
+    daily[date.getDate()] = JSON.stringify(items);
   }
   putItems(date: Date, items: Item[]) {
     return new Promise<void>(resolve => setTimeout(() => {
@@ -126,21 +121,11 @@ export class TestMoneyBookService extends MoneyBookService {
       resolve();
     }, 1000));
   }
-  getMonthlyTotals(months: Date[], sources: {[id: number]: boolean}, destinations: {[id: number]: boolean}) {
-    const series0: Series = {};
-    for (const id in sources) if (sources[id]) series0[id] = Array<number>(months.length).fill(0);
-    const series1: Series = {};
-    for (const id in destinations) if (destinations[id]) series1[id] = Array<number>(months.length).fill(0);
-    months.forEach((x, i) => {
-      const monthly = this.items[this.toMonth(x)];
-      if (monthly) monthly.forEach(x => x.filter(x => sources[x.source] && destinations[x.destination]).forEach(x => {
-        series0[x.source][i] += x.amount;
-        series1[x.destination][i] += x.amount;
-      }));
-    });
-    return new Promise(resolve => setTimeout(() => {
-      resolve([series0, series1]);
-    }, 1000));
+  getAllItemsPerMonth(months: Date[]) {
+    return new Promise(resolve => setTimeout(() => resolve(months.map(x => {
+      const daily = this.items[this.toMonth(x)];
+      return daily ? daily.map(x => <Item[]>JSON.parse(x)) : [];
+    })), 1000));
   }
 }
 
@@ -247,12 +232,12 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
     return `items${this.toMonth(x)}${pad(x.getDate())}`;
   }
   getItems(date: Date) {
-    return this.runOutside(() => this.getJSONByName(this.toItemsName(date))).then(x => x ? x as Item[] : []);
+    return this.runOutside(() => this.getJSONByName(this.toItemsName(date))).then(x => x ? <Item[]>x : []);
   }
   putItems(date: Date, items: Item[]) {
     return this.runOutside(() => this.putJSONByName(this.toItemsName(date), items.length > 0 ? items : null));
   }
-  getMonthlyTotals(months: Date[], sources: {[id: number]: boolean}, destinations: {[id: number]: boolean}) {
+  getAllItemsPerMonth(months: Date[]) {
     return this.runOutside(() => {
       const yms = months.map(x => this.toMonth(x));
       return tryOrBackoff(() => gapi.client.drive.files.list({
@@ -261,20 +246,12 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
         pageSize: 1000,
         fields: 'files(name, description)'
       }), 100).then((x: any) => {
-        const series0: Series = {};
-        for (const id in sources) if (sources[id]) series0[id] = Array<number>(yms.length).fill(0);
-        const series1: Series = {};
-        for (const id in destinations) if (destinations[id]) series1[id] = Array<number>(yms.length).fill(0);
-        const ym2i: {[month: string]: number} = {};
-        yms.forEach((x, i) => ym2i[x] = i);
-        x.result.files.forEach((x: any) => {
-          const i = ym2i[x.name.substr(5, 6)];
-          (<Item[]>JSON.parse(x.description)).filter(x => sources[x.source] && destinations[x.destination]).forEach(x => {
-            series0[x.source][i] += x.amount;
-            series1[x.destination][i] += x.amount;
-          });
-        });
-        return [series0, series1];
+        const ym2i: {[month: string]: Item[][]} = {};
+        const items = yms.map((x, i) => ym2i[x] = <Item[][]>[]);
+        x.result.files.forEach((x: any) =>
+          ym2i[x.name.substr(5, 6)][+x.name.substr(11, 2)] = <Item[]>JSON.parse(x.description)
+        );
+        return items;
       });
     });
   }

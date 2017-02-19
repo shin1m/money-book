@@ -126,6 +126,10 @@
         <source>Monthly Totals</source>
         <target>月別集計</target>
       </trans-unit>
+      <trans-unit id="3daea70497d0fe4aa9cf6c93984bca14493e074a" datatype="html">
+        <source>Daily Totals in </source>
+        <target>日別集計: </target>
+      </trans-unit>
       <trans-unit id="c3b08b07b5ab98e7cdcf18df39355690ab7d3884" datatype="html">
         <source>Previous month</source>
         <target>前月</target>
