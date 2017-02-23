@@ -10,6 +10,7 @@ import {
   ViewChild,
   ViewChildren
 } from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
 import {Observable} from 'rxjs/Observable';
 import {Subscription} from 'rxjs/Subscription';
 import {Subject as RxSubject} from 'rxjs/Subject';
@@ -72,6 +73,11 @@ export class SelectSubjectComponent implements OnInit {
   focus() {
     this.mdSelect.close();
   }
+}
+
+function toYYYYMMDD(x: Date) {
+  const pad = (x: number) => `${x < 10 ? '0' : ''}${x}`;
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
 }
 
 @Component({
@@ -224,29 +230,37 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
   modified: boolean;
   invalid: boolean;
   private modifieds = new RxSubject<boolean>();
-  constructor(private service: MoneyBookService, private snackBar: MdSnackBar) {
+  constructor(
+    private service: MoneyBookService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private snackBar: MdSnackBar
+  ) {
     this._date.setHours(0, 0, 0, 0);
   }
   ngOnInit() {
-    this.targetDates.debounceTime(500).distinctUntilChanged().switchMap(x => {
-      this.waiting = true;
-      return Observable.fromPromise(this.service.getItems(new Date(x)));
-    }).subscribe(x => {
-      this.items = x;
-      this.original = JSON.stringify(this.items);
-      this.waiting = false;
-    });
-    this.modifieds.debounceTime(3000).filter(x => x).subscribe(x => {
-      if (!this.waiting && this.modified && !this.invalid) this.save();
-    });
-    this.service.getSubjects().then(x => {
+    const dates = this.route.params.map(params => params['date']);
+    dates.filter(x => !x).subscribe(x => this.router.navigate(['/items', toYYYYMMDD(new Date())], {replaceUrl: true}));
+    const subjects = this.service.getSubjects().then(x => {
       this.subjects = [];
       x.forEach(x => this.subjects[x.id] = x);
       this.sources = sortSubjects(x, 'source');
       this.destinations = sortSubjects(x, 'destination');
       this.setNewItem();
       this.source = this.sources[0].id;
-      this.load();
+    });
+    dates.filter(x => x).switchMap(x => {
+      this._date = new Date(x);
+      this.waiting = true;
+      return Observable.fromPromise(subjects.then(() => this.service.getItems(this._date)));
+    }).subscribe(x => {
+      this.items = x;
+      this.original = JSON.stringify(this.items);
+      this.waiting = false;
+    });
+    this.targetDates.debounceTime(500).distinctUntilChanged().subscribe(x => this.router.navigate(['/items', toYYYYMMDD(new Date(x))]));
+    this.modifieds.debounceTime(3000).filter(x => x).subscribe(x => {
+      if (!this.waiting && this.modified && !this.invalid) this.save();
     });
   }
   ngDoCheck() {

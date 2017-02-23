@@ -1,4 +1,5 @@
 import {Component, HostListener, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
 import {Observable} from 'rxjs/Observable';
 import {Subject as RxSubject} from 'rxjs/Subject';
 import 'rxjs/add/observable/fromPromise';
@@ -108,6 +109,16 @@ class MonthlyTotals {
   }
 }
 
+function toYYYYMM(x: Date) {
+  const pad = (x: number) => `${x < 10 ? '0' : ''}${x}`;
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}`;
+}
+
+function toYYYYMMDD(x: Date) {
+  const pad = (x: number) => `${x < 10 ? '0' : ''}${x}`;
+  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`;
+}
+
 @Component({
   template: `
     <mb-message name="monthly" i18n>Monthly Totals</mb-message>
@@ -171,58 +182,92 @@ export class DashboardComponent implements OnInit {
   private sourceTotals: MonthlyTotals;
   private destinationTotals: MonthlyTotals;
   options: Object;
-  private drilldown: boolean;
-  constructor(private service: MoneyBookService, private dialog: MdDialog) {
+  private drilldown: null | number;
+  constructor(
+    private service: MoneyBookService,
+    private route: ActivatedRoute,
+    private router: Router,
+    private dialog: MdDialog
+  ) {
     this._month.setDate(1);
     this._month.setHours(0, 0, 0, 0);
   }
   ngOnInit() {
-    this.targetMonths.debounceTime(500).distinctUntilChanged().switchMap(x => {
-      this.waiting = true;
-      return Observable.fromPromise(this.load(new Date(x)));
-    }).subscribe(() => {
-      this.draw();
-      this.waiting = false;
-    });
-    this.service.getSubjects().then(x => {
+    const months = this.route.params.map(params => params['month']);
+    months.filter(x => !x).subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date())], {replaceUrl: true}));
+    const subjects = this.service.getSubjects().then(x => {
       this.sources = sortSubjects(x, 'source');
       this.sources.forEach(x => this.selectedSources[x.id] = x.source !== '');
       this.destinations = sortSubjects(x, 'destination');
       this.destinations.forEach(x => this.selectedDestinations[x.id] = x.destination !== '');
+    });
+    months.filter(x => x).switchMap(x => {
+      const xs = decodeURIComponent(x).split(',');
+      this._month = new Date(xs[0]);
+      this._month.setDate(1);
+      this._month.setHours(0, 0, 0, 0);
+      if (this.months && this._month.getTime() === this.months[11].getTime()) return [{
+        drilldown: xs[1]
+      }];
       this.waiting = true;
-      return this.load(this._month).then(() => {
+      return Observable.fromPromise(subjects.then(() => {
+        const months: Date[] = [];
+        for (let i = 0; i < 12; ++i) months.push(new Date(this.year, this.month - 12 + i));
+        return this.service.getAllItemsPerMonth(months).then(x => ({
+          months: months,
+          items: x,
+          drilldown: xs[1]
+        }));
+      }));
+    }).subscribe((x: {
+      months: Date[],
+      items: Item[][][],
+      drilldown: string
+    }) => {
+      if (x.months) {
+        this.months = x.months;
+        this.categories = this.months.map(toYYYYMM);
+        this.items = x.items;
         this.draw();
         this.waiting = false;
-      });
+      }
+      if (x.drilldown) {
+        const drilldown = +x.drilldown;
+        if (drilldown !== this.drilldown) setTimeout(() => this.chart.chart.series[0].data[drilldown].firePointEvent('click'));
+      } else {
+        if (this.drilldown !== null) this.chart.chart.drillUp();
+      }
     });
+    this.targetMonths.debounceTime(500).distinctUntilChanged().subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date(x))]));
   }
   @ViewChild('chart') chart: any;
   @HostListener('window:resize') resize() {
-    if (this.chart.chart) this.chart.chart.reflow();
+    if (this.chart && this.chart.chart) this.chart.chart.reflow();
   }
+  private navigated = false;
   chartDrilldown(e: any) {
-    if (this.drilldown) return;
-    this.drilldown = true;
     const index = e.originalEvent.category;
-    this.chart.chart.setTitle({
-      text: this.name2message['daily'] + this.categories[index]
-    });
-    this.sourceTotals.drawDaily(index)
-    .concat(this.destinationTotals.drawDaily(index))
-    .forEach((x, i) => this.chart.chart.addSingleSeriesAsDrilldown(e.originalEvent.points[i], x));
-    this.chart.chart.applyDrilldown();
+    if (this.drilldown === null) {
+      this.drilldown = index;
+      this.chart.chart.setTitle({
+        text: this.name2message['daily'] + this.categories[index]
+      });
+      this.sourceTotals.drawDaily(index)
+      .concat(this.destinationTotals.drawDaily(index))
+      .forEach((x, i) => this.chart.chart.addSingleSeriesAsDrilldown(e.originalEvent.points[i], x));
+      this.chart.chart.applyDrilldown();
+      this.router.navigate(['/dashboard', `${toYYYYMM(this._month)},${index}`]);
+    } else if (!this.navigated) {
+      this.navigated = true;
+      this.router.navigate(['/items', toYYYYMMDD(new Date(this.year, this.month - 12 + this.drilldown, index + 1))]);
+    }
   }
   chartDrillup(e: any) {
     this.chart.chart.setTitle({
       text: this.name2message['monthly']
     });
-    this.drilldown = false;
-  }
-  private load(month: Date) {
-    this.months = [];
-    for (let i = 0; i < 12; ++i) this.months.push(new Date(month.getFullYear(), month.getMonth() - 11 + i));
-    this.categories = this.months.map(x => `${x.getFullYear()}-${x.getMonth() + 1}`);
-    return this.service.getAllItemsPerMonth(this.months).then(x => this.items = x);
+    this.drilldown = null;
+    this.router.navigate(['/dashboard', toYYYYMM(this._month)]);
   }
   private draw() {
     const totals0 = new MonthlyTotals(this.name2message['from'], 'source', this.sources.filter(x => this.selectedSources[x.id]), this.months);
@@ -254,14 +299,48 @@ export class DashboardComponent implements OnInit {
         title: {text: null}
       },
       tooltip: {
-        shared: true
+        formatter: function() {
+          const list = (points: any[]) => `
+            <td>
+              ${points.map(x => `
+                <div>
+                  <span style="color: ${x.color};">\u25CF</span>
+                  ${x.series.name}:
+                </div>
+              `).join('')}
+            </td>
+            <td style="text-align: right;">
+              ${points.map(x => `<div><b>${x.y}</b></div>`).join('')}
+            </td>
+          `;
+          const left = this.points.filter((x: any) => x.series.columnIndex === 0)
+          const right = this.points.filter((x: any) => x.series.columnIndex !== 0)
+          return `
+            <div><b>${this.points[0].key}</b></div>
+            <table>
+              <tr>
+                ${list(left)}
+                <td><span style="margin: 0.5em;">&rarr;</span></td>
+                ${list(right)}
+              </tr>
+              <tr>
+                <td></td><td></td><td></td><td></td>
+                <td style="text-align: right;">
+                  <b>${left.reduce((value: number, x: any) => value + x.y, 0)}</b>
+                </td>
+              </tr>
+            </table>
+          `;
+        },
+        shared: true,
+        useHTML: true
       },
       series: this.sourceTotals.drawMonthly(this.categories).concat(this.destinationTotals.drawMonthly(this.categories)),
       drilldown: {
         allowPointDrilldown: false
       }
     };
-    this.drilldown = false;
+    this.drilldown = null;
     setTimeout(() => this.resize());
   }
   private setMonth(value: Date) {

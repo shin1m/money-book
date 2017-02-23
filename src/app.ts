@@ -158,9 +158,14 @@ export class EdgeInputNumberDirective {
 }
 
 export function highchartsFactory() {
-  const highcharts = require('highcharts');
-  require('highcharts/modules/drilldown')(highcharts);
-  return highcharts;
+  const Highcharts = require('highcharts');
+  require('highcharts/modules/drilldown')(Highcharts);
+  Highcharts.setOptions({
+    lang: {
+      drillUpText: 'Back'
+    }
+  });
+  return Highcharts;
 }
 
 @NgModule({
@@ -183,7 +188,18 @@ export function highchartsFactory() {
         canActivate: [AuthGuard]
       },
       {
+        path: 'dashboard/:month',
+        component: DashboardComponent,
+        canActivate: [AuthGuard]
+      },
+      {
         path: 'items',
+        component: ItemsComponent,
+        canActivate: [AuthGuard],
+        canDeactivate: [CanDeactivateGuard]
+      },
+      {
+        path: 'items/:date',
         component: ItemsComponent,
         canActivate: [AuthGuard],
         canDeactivate: [CanDeactivateGuard]
