@@ -157,9 +157,11 @@ export class EdgeInputNumberDirective {
   }
 }
 
+declare var Highcharts: any;
+
 export function highchartsFactory() {
-  const Highcharts = require('highcharts');
-  require('highcharts/modules/drilldown')(Highcharts);
+  //const Highcharts = require('highcharts');
+  //require('highcharts/modules/drilldown')(Highcharts);
   Highcharts.setOptions({
     lang: {
       drillUpText: 'Back'
