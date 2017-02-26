@@ -2,7 +2,7 @@ System.config({
   transpiler: 'ts',
   typescriptOptions: {
     target: 'es5',
-    module: 'commonjs',
+    module: 'system',
     moduleResolution: 'node',
     sourceMap: true,
     emitDecoratorMetadata: true,
@@ -46,7 +46,7 @@ System.config({
     '@angular/material': 'npm:@angular/material/bundles/material.umd.js',
     'angular2-highcharts': 'npm:angular2-highcharts/dist',
     'angular2-highcharts/dist/HighchartsService': 'npm:angular2-highcharts/dist/HighchartsService',
-    'highcharts': 'npm:highcharts',
+    //'highcharts': 'npm:highcharts',
 
     text: 'systemjs-text-plugin.js'
   },
@@ -58,10 +58,10 @@ System.config({
     rxjs: {
       defaultExtension: 'js'
     },
-    highcharts: {
+    /*highcharts: {
       main: './highcharts.js',
       defaultExtension: 'js'
-    },
+    },*/
     'angular2-highcharts': {
       main: './index.js',
       defaultExtension: 'js'
