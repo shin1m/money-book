@@ -48,12 +48,16 @@ export class TestMoneyBookService extends MoneyBookService {
   items: {[month: string]: string[]} = {};
   constructor() {
     super();
-    this.subjects = JSON.stringify([
+    const subjects = [
       {id: 1, name: 'Cash', source: 'a', destination: '', revoked: false},
       {id: 2, name: 'Deposit', source: 'b', destination: '', revoked: false},
       {id: 3, name: 'Foods', source: '', destination: 'a', revoked: false},
       {id: 4, name: 'Others', source: '', destination: 'b', revoked: false}
-    ]);
+    ];
+    for (let i = 0; i < 24; ++i) subjects.push({
+      id: subjects.length + 1, name: `Extra ${i}`, source: '', destination: String.fromCharCode('c'.charCodeAt(0) + i), revoked: false
+    });
+    this.subjects = JSON.stringify(subjects);
     const date = new Date();
     date.setDate(1);
     date.setHours(0, 0, 0, 0);
@@ -64,9 +68,10 @@ export class TestMoneyBookService extends MoneyBookService {
       const n = Math.floor(Math.random() * 5);
       if (n <= 0) continue;
       const items: Item[] = [];
+      const d = Math.random();
       for (let i = 0; i < n; ++i) items.push({
         source: Math.random() < 0.9 ? 1 : 2,
-        destination: Math.random() < 0.7 ? 3 : 4,
+        destination: d < 0.5 ? 3 : d < 0.7 ? 4 : Math.floor(Math.random() * 24) + 5,
         amount: Math.floor(Math.random() * 10000),
         description: ''
       });
