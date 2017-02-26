@@ -79,10 +79,10 @@ class MonthlyTotals {
   ) {
     this.daily = months.map(x => []);
     this.subjects.forEach(x => {
-      this.monthly[x.id] = Array<number>(months.length).fill(0);
+      this.monthly[x.id] = Array<number>(months.length).fill(null);
       months.forEach((y, i) => {
         const n = new Date(y.getFullYear(), y.getMonth() + 1, 0).getDate();
-        this.daily[i][x.id] = Array<number>(n).fill(0);
+        this.daily[i][x.id] = Array<number>(n).fill(null);
       });
     });
   }
@@ -300,19 +300,22 @@ export class DashboardComponent implements OnInit {
       },
       tooltip: {
         formatter: function() {
-          const list = (points: any[]) => `
-            <td>
-              ${points.map(x => `
-                <div>
-                  <span style="color: ${x.color};">\u25CF</span>
-                  ${x.series.name}:
-                </div>
-              `).join('')}
-            </td>
-            <td style="text-align: right;">
-              ${points.map(x => `<div><b>${x.y}</b></div>`).join('')}
-            </td>
-          `;
+          const list = (points: any[]) => {
+            points = points.filter(x => x.y !== null);
+            return `
+              <td>
+                ${points.map(x => `
+                  <div>
+                    <span style="color: ${x.color};">\u25CF</span>
+                    ${x.series.name}:
+                  </div>
+                `).join('')}
+              </td>
+              <td style="text-align: right;">
+                ${points.map(x => `<div><b>${x.y}</b></div>`).join('')}
+              </td>
+            `;
+          };
           const left = this.points.filter((x: any) => x.series.columnIndex === 0)
           const right = this.points.filter((x: any) => x.series.columnIndex !== 0)
           return `
@@ -337,7 +340,8 @@ export class DashboardComponent implements OnInit {
       },
       series: this.sourceTotals.drawMonthly(this.categories).concat(this.destinationTotals.drawMonthly(this.categories)),
       drilldown: {
-        allowPointDrilldown: false
+        allowPointDrilldown: false,
+        animation: false
       }
     };
     this.drilldown = null;
