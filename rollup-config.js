@@ -14,11 +14,12 @@ export default {
     commonjs({
       include: [
         'node_modules/rxjs/**',
-        'node_modules/highcharts/**',
-        'node_modules/angular2-highcharts/**'
+        'node_modules/angular2-highcharts/**',
+        'node_modules/mydatepicker/**'
       ],
       namedExports: {
-        'node_modules/angular2-highcharts/index.js': ['ChartModule']
+        'node_modules/angular2-highcharts/index.js': ['ChartModule'],
+        'node_modules/mydatepicker/index.js': ['MyDatePickerModule']
       }
     }),
     uglify()

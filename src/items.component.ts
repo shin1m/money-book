@@ -20,6 +20,7 @@ import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
 import 'rxjs/add/operator/switchMap';
 import {MdSelect, MdSnackBar} from '@angular/material';
+import {IMyOptions, IMyDate, IMyDateModel} from 'mydatepicker';
 import {Subject, sortSubjects, Item, MoneyBookService} from './money-book.service';
 import {CanComponentDeactivate} from './can-deactivate-guard.service';
 import {MessageComponent} from './message.component';
@@ -88,46 +89,36 @@ function toYYYYMMDD(x: Date) {
     <mb-message name="close" i18n>Close</mb-message>
     <div class="centerable">
       <ng-container *ngIf="subjects">
-        <md-toolbar>
-          <button md-icon-button [disabled]="modified" (click)="date = date - 1" i18n-mdTooltip mdTooltip="Previous day">
-            <md-icon>chevron_left</md-icon>
-          </button>
-          <md-input-container>
-            <input mdInput [disabled]="modified" [(ngModel)]="year" type="number" class="year" required>
-          </md-input-container>
-          <md-input-container>
-            <input mdInput [disabled]="modified" [(ngModel)]="month" type="number" class="month" required>
-          </md-input-container>
-          <md-input-container>
-            <input mdInput [disabled]="modified" [(ngModel)]="date" type="number" class="date" required>
-          </md-input-container>
-          <button md-icon-button [disabled]="modified" (click)="date = date + 1" i18n-mdTooltip mdTooltip="Next day">
-            <md-icon>chevron_right</md-icon>
-          </button>
-          <span class="app-toolbar-filler"></span>
-          <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
-            <md-icon>done</md-icon>
-          </button>
-          <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
-            <md-icon>close</md-icon>
-          </button>
-        </md-toolbar>
-        <table class="source">
+        <my-date-picker [options]="myDatePickerOptions" i18n-locale locale="en" [selDate]="myDate" (dateChanged)="onDateChanged($event)"></my-date-picker>
+        <table>
           <tr>
-            <td i18n>Source</td>
-            <td class="select">
-              <mb-select-subject [subjects]="sources" mnemonic="source" [(selected)]="source"></mb-select-subject>
+            <td colspan="3">
+              <table class="source">
+                <tr>
+                  <td i18n>Source</td>
+                  <td class="select">
+                    <mb-select-subject [subjects]="sources" mnemonic="source" [(selected)]="source"></mb-select-subject>
+                  </td>
+                  <td>
+                    <md-chip-list>
+                      <md-chip *ngFor="let summary of summaries" [selected]="summary.subject.id === source">
+                        {{summary.subject.name}} {{summary.count}}
+                      </md-chip>
+                    </md-chip-list>
+                  </td>
+                </tr>
+              </table>
             </td>
             <td>
-              <md-chip-list>
-                <md-chip *ngFor="let summary of summaries" [selected]="summary.subject.id === source">
-                  {{summary.subject.name}} {{summary.count}}
-                </md-chip>
-              </md-chip-list>
+              <span class="app-toolbar-filler"></span>
+              <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
+                <md-icon>done</md-icon>
+              </button>
+              <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
+                <md-icon>close</md-icon>
+              </button>
             </td>
           </tr>
-        </table>
-        <table>
           <tr>
             <td i18n>Destination</td>
             <td i18n>Amount</td>
@@ -181,17 +172,9 @@ function toYYYYMMDD(x: Date) {
     </div>
   `,
   styles: [`
-    input.year {
-      width: 3em;
-      text-align: right;
-    }
-    input.month {
-      width: 2em;
-      text-align: right;
-    }
-    input.date {
-      width: 2em;
-      text-align: right;
+    my-date-picker {
+      float: left;
+      margin: 1em;
     }
     table.source {
       padding-top: 2em;
@@ -208,9 +191,9 @@ function toYYYYMMDD(x: Date) {
   `]
 })
 export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
-  private name2message: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messages(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.name2message[x.name] = x.value);
+  private messages: {[name: string]: string} = {};
+  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
+    values.forEach(x => this.messages[x.name] = x.value);
   }
   @ViewChild('newDestination') newDestination: SelectSubjectComponent;
   @ViewChild('newAmount') newAmount: ElementRef;
@@ -230,6 +213,10 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
   modified: boolean;
   invalid: boolean;
   private modifieds = new RxSubject<boolean>();
+  private myDatePickerOptions: IMyOptions = {
+    firstDayOfWeek: 'su',
+    inline: true
+  };
   constructor(
     private service: MoneyBookService,
     private route: ActivatedRoute,
@@ -237,6 +224,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
     private snackBar: MdSnackBar
   ) {
     this._date.setHours(0, 0, 0, 0);
+    this.setMyDate();
   }
   ngOnInit() {
     const dates = this.route.params.map(params => params['date']);
@@ -251,6 +239,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
     });
     dates.filter(x => x).switchMap(x => {
       this._date = new Date(x);
+      this.setMyDate();
       this.waiting = true;
       return Observable.fromPromise(subjects.then(() => this.service.getItems(this._date)));
     }).subscribe(x => {
@@ -274,7 +263,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
     this.modifieds.next(this.modified);
   }
   canDeactivate() {
-    return !this.modified || confirm(this.name2message['confirm']);
+    return !this.modified || confirm(this.messages['confirm']);
   }
   private setNewItem() {
     this.newItem = new Item();
@@ -293,37 +282,35 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
     const original = JSON.stringify(this.items);
     this.service.putItems(this._date, this.items).then(() => {
       this.original = original;
-      this.snackBar.open(this.name2message['saved'], null, {duration: 1000});
+      this.snackBar.open(this.messages['saved'], null, {duration: 1000});
     }, x => {
       console.log(x);
-      this.snackBar.open(`${this.name2message['failed']}: ${x.message}`, this.name2message['close']);
+      this.snackBar.open(`${this.messages['failed']}: ${x.message}`, this.messages['close']);
     }).then(() => this.waiting = false);
   }
   discard() {
     if (this.canDeactivate()) this.load();
   }
-  private setDate(value: Date) {
-    if (value.getTime() === this._date.getTime()) return;
-    this._date = value;
+  private myDate: IMyDate = {year: 0, month: 0, day: 0};
+  private setMyDate() {
+    this.myDate.year = this.year;
+    this.myDate.month = this.month;
+    this.myDate.day = this.date;
+  }
+  onDateChanged(event: IMyDateModel) {
+    this.myDate = event.date;
+    this._date = event.jsdate;
+    this.setMyDate();
     this.targetDates.next(this._date.getTime());
   }
   get year() {
     return this._date.getFullYear();
   }
-  set year(value: number) {
-    this.setDate(new Date(value, this.month - 1, this.date));
-  }
   get month() {
     return this._date.getMonth() + 1;
   }
-  set month(value: number) {
-    this.setDate(new Date(this.year, value - 1, this.date));
-  }
   get date() {
     return this._date.getDate();
-  }
-  set date(value: number) {
-    this.setDate(new Date(this.year, this.month - 1, value));
   }
   add() {
     this.newItem.source = this.source;

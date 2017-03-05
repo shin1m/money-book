@@ -32,6 +32,7 @@
     "angular-in-memory-web-api": "~0.2",
     "angular2-highcharts": "~0",
     "core-js": "~2.4",
+    "mydatepicker": "^1.7",
     "rxjs": "~5.0",
     "systemjs": "~0.19",
     "zone.js": "~0.7"

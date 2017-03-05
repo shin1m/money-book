@@ -121,8 +121,6 @@ function toYYYYMMDD(x: Date) {
 
 @Component({
   template: `
-    <mb-message name="monthly" i18n>Monthly Totals</mb-message>
-    <mb-message name="daily" i18n>Daily Totals in </mb-message>
     <mb-message name="from" i18n>From</mb-message>
     <mb-message name="to" i18n>To</mb-message>
     <div class="centerable">
@@ -140,7 +138,10 @@ function toYYYYMMDD(x: Date) {
           <button md-icon-button [disabled]="modified" (click)="month = month + 1" i18n-mdTooltip mdTooltip="Next month">
             <md-icon>chevron_right</md-icon>
           </button>
-          <span class="app-toolbar-filler"></span>
+          <span *ngIf="drilldown === null" class="app-toolbar-filler" i18n>Monthly Totals</span>
+          <span *ngIf="drilldown !== null" class="app-toolbar-filler">
+            <ng-container i18n>Daily Totals in</ng-container> {{categories[drilldown]}}
+          </span>
           <button md-icon-button (click)="settings()" i18n-mdTooltip mdTooltip="Settings">
             <md-icon>settings</md-icon>
           </button>
@@ -162,12 +163,15 @@ function toYYYYMMDD(x: Date) {
       width: 2em;
       text-align: right;
     }
+    .app-toolbar-filler {
+      text-align: center;
+    }
   `]
 })
 export class DashboardComponent implements OnInit {
-  private name2message: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messages(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.name2message[x.name] = x.value);
+  private messages: {[name: string]: string} = {};
+  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
+    values.forEach(x => this.messages[x.name] = x.value);
   }
   waiting = true;
   private _month = new Date();
@@ -182,7 +186,7 @@ export class DashboardComponent implements OnInit {
   private sourceTotals: MonthlyTotals;
   private destinationTotals: MonthlyTotals;
   options: Object;
-  private drilldown: null | number;
+  private drilldown: null | number = null;
   constructor(
     private service: MoneyBookService,
     private route: ActivatedRoute,
@@ -249,9 +253,6 @@ export class DashboardComponent implements OnInit {
     const index = e.originalEvent.category;
     if (this.drilldown === null) {
       this.drilldown = index;
-      this.chart.chart.setTitle({
-        text: this.name2message['daily'] + this.categories[index]
-      });
       this.sourceTotals.drawDaily(index)
       .concat(this.destinationTotals.drawDaily(index))
       .forEach((x, i) => this.chart.chart.addSingleSeriesAsDrilldown(e.originalEvent.points[i], x));
@@ -263,15 +264,12 @@ export class DashboardComponent implements OnInit {
     }
   }
   chartDrillup(e: any) {
-    this.chart.chart.setTitle({
-      text: this.name2message['monthly']
-    });
     this.drilldown = null;
     this.router.navigate(['/dashboard', toYYYYMM(this._month)]);
   }
   private draw() {
-    const totals0 = new MonthlyTotals(this.name2message['from'], 'source', this.sources.filter(x => this.selectedSources[x.id]), this.months);
-    const totals1 = new MonthlyTotals(this.name2message['to'], 'destination', this.destinations.filter(x => this.selectedDestinations[x.id]), this.months);
+    const totals0 = new MonthlyTotals(this.messages['from'], 'source', this.sources.filter(x => this.selectedSources[x.id]), this.months);
+    const totals1 = new MonthlyTotals(this.messages['to'], 'destination', this.destinations.filter(x => this.selectedDestinations[x.id]), this.months);
     this.items.forEach((x, i) => x.forEach((x, j) => {
       x.filter(x => this.selectedSources[x.source] && this.selectedDestinations[x.destination]).forEach(x => {
         totals0.add(i, j, x.source, x.amount);
@@ -282,11 +280,18 @@ export class DashboardComponent implements OnInit {
     this.destinationTotals = totals1;
     this.options = {
       chart: {
+        animation: false,
         type: 'column',
         zoomType: 'xy'
       },
+      credits: {
+        enabled: false
+      },
       title: {
-        text: this.name2message['monthly']
+        text: null
+      },
+      legend: {
+        enabled: false
       },
       plotOptions: {
         column: {stacking: 'normal'}

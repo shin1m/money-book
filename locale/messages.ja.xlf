@@ -70,13 +70,9 @@
         <source>Add new subject</source>
         <target>新しい費目を追加</target>
       </trans-unit>
-      <trans-unit id="68149b3e5c8377f1741b76e87802ed3efbe6e332" datatype="html">
-        <source>Previous day</source>
-        <target>前日</target>
-      </trans-unit>
-      <trans-unit id="fd78c797e104e0add29b5df28716bde3e726f6ef" datatype="html">
-        <source>Next day</source>
-        <target>翌日</target>
+      <trans-unit id="e4caa85607483a250cf6eb521bc21e561b9829f1" datatype="html">
+        <source>en</source>
+        <target>ja</target>
       </trans-unit>
       <trans-unit id="6834fa6b43d1ecbdf147c48dd9c4d72f1484571d" datatype="html">
         <source>Source</source>
@@ -122,14 +118,6 @@
         <source>To</source>
         <target>先</target>
       </trans-unit>
-      <trans-unit id="beeb3c78942cca8ce081ea165ea16db06e15f9f3" datatype="html">
-        <source>Monthly Totals</source>
-        <target>月別集計</target>
-      </trans-unit>
-      <trans-unit id="3daea70497d0fe4aa9cf6c93984bca14493e074a" datatype="html">
-        <source>Daily Totals in </source>
-        <target>日別集計: </target>
-      </trans-unit>
       <trans-unit id="c3b08b07b5ab98e7cdcf18df39355690ab7d3884" datatype="html">
         <source>Previous month</source>
         <target>前月</target>
@@ -137,6 +125,14 @@
       <trans-unit id="4bd046985cfe13040d5ef0cd881edce0968a111a" datatype="html">
         <source>Next month</source>
         <target>翌月</target>
+      </trans-unit>
+      <trans-unit id="beeb3c78942cca8ce081ea165ea16db06e15f9f3" datatype="html">
+        <source>Monthly Totals</source>
+        <target>月別集計</target>
+      </trans-unit>
+      <trans-unit id="ef1fe7eb3fccd120d7d790ab96283a10fcd58e51" datatype="html">
+        <source>Daily Totals in</source>
+        <target>日別集計:</target>
       </trans-unit>
       <trans-unit id="121cc5391cd2a5115bc2b3160379ee5b36cd7716" datatype="html">
         <source>Settings</source>

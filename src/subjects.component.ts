@@ -12,17 +12,21 @@ import {MessageComponent} from './message.component';
     <mb-message name="close" i18n>Close</mb-message>
     <div class="centerable">
       <ng-container *ngIf="subjects">
-        <md-toolbar>
-          <md-checkbox [(ngModel)]="includeRevoked" i18n>Include Revoked</md-checkbox>
-          <span class="app-toolbar-filler"></span>
-          <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
-            <md-icon>done</md-icon>
-          </button>
-          <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
-            <md-icon>close</md-icon>
-          </button>
-        </md-toolbar>
         <table>
+          <tr>
+            <td class="include-revoked" colspan="3">
+              <md-checkbox [(ngModel)]="includeRevoked" i18n>Include Revoked</md-checkbox>
+            </td>
+            <td *ngIf="includeRevoked"></td>
+            <td>
+              <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
+                <md-icon>done</md-icon>
+              </button>
+              <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
+                <md-icon>close</md-icon>
+              </button>
+            </td>
+          </tr>
           <tr>
             <!-- <th rowspan="2">ID</th> -->
             <th rowspan="2" i18n>Name</th>
@@ -94,15 +98,18 @@ import {MessageComponent} from './message.component';
     </div>
   `,
   styles: [`
+    .include-revoked {
+      height: 3em;
+    }
     input.mnemonic {
       width: 2em;
     }
   `]
 })
 export class SubjectsComponent implements OnInit, CanComponentDeactivate {
-  private name2message: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messages(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.name2message[x.name] = x.value);
+  private messages: {[name: string]: string} = {};
+  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
+    values.forEach(x => this.messages[x.name] = x.value);
   }
   waiting: boolean;
   subjects: Subject[];
@@ -114,7 +121,7 @@ export class SubjectsComponent implements OnInit, CanComponentDeactivate {
     this.load();
   }
   canDeactivate() {
-    return !this.modified || confirm(this.name2message['confirm']);
+    return !this.modified || confirm(this.messages['confirm']);
   }
   get modified() {
     return JSON.stringify(this.subjects) !== this.original;
@@ -135,10 +142,10 @@ export class SubjectsComponent implements OnInit, CanComponentDeactivate {
     const original = JSON.stringify(this.subjects);
     this.service.putSubjects(this.subjects).then(() => {
       this.original = original;
-      this.snackBar.open(this.name2message['saved'], null, {duration: 1000});
+      this.snackBar.open(this.messages['saved'], null, {duration: 1000});
     }, x => {
       console.log(x);
-      this.snackBar.open(`${this.name2message['failed']}: ${x.message}`, this.name2message['close']);
+      this.snackBar.open(`${this.messages['failed']}: ${x.message}`, this.messages['close']);
     }).then(() => this.waiting = false);
   }
   discard() {

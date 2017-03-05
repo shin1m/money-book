@@ -27,6 +27,7 @@ import 'rxjs/add/operator/first';
 import {MaterialModule} from '@angular/material';
 import {HighchartsStatic} from 'angular2-highcharts/dist/HighchartsService';
 import {ChartModule} from 'angular2-highcharts';
+import {MyDatePickerModule} from 'mydatepicker';
 import {MoneyBookService, GoogleDriveMoneyBookService} from './money-book.service';
 import {CanDeactivateGuard} from './can-deactivate-guard.service';
 import {MessageComponent} from './message.component';
@@ -164,7 +165,7 @@ export function highchartsFactory() {
   //require('highcharts/modules/drilldown')(Highcharts);
   Highcharts.setOptions({
     lang: {
-      drillUpText: 'Back'
+      drillUpText: '\u21B0'
     }
   });
   return Highcharts;
@@ -179,6 +180,7 @@ export function highchartsFactory() {
       require('highcharts/modules/drilldown')
     ),*/
     ChartModule,
+    MyDatePickerModule,
     RouterModule.forRoot([
       {
         path: 'signin',

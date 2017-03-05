@@ -47,6 +47,7 @@ System.config({
     'angular2-highcharts': 'npm:angular2-highcharts/dist',
     'angular2-highcharts/dist/HighchartsService': 'npm:angular2-highcharts/dist/HighchartsService',
     //'highcharts': 'npm:highcharts',
+    'mydatepicker': 'npm:mydatepicker/bundles/mydatepicker.umd.js',
 
     text: 'systemjs-text-plugin.js'
   },
