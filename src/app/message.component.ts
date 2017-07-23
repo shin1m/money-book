@@ -1,4 +1,4 @@
-import {Component, Input, TemplateRef, ViewChild, ViewContainerRef} from '@angular/core';
+import { Component, Input, TemplateRef, ViewChild, ViewContainerRef } from '@angular/core';
 
 @Component({
   selector: 'mb-message',

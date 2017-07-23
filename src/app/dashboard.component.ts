@@ -1,39 +1,48 @@
-import {Component, HostListener, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Observable} from 'rxjs/Observable';
-import {Subject as RxSubject} from 'rxjs/Subject';
+import {
+  Component,
+  HostListener,
+  Inject,
+  QueryList,
+  ViewChild,
+  ViewChildren
+} from '@angular/core';
+import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Observable } from 'rxjs/Observable';
+import { Subject as RxSubject } from 'rxjs/Subject';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/debounceTime';
 import 'rxjs/add/operator/distinctUntilChanged';
+import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/switchMap';
-import {MdDialog} from '@angular/material';
-import {Subject, sortSubjects, Item, MoneyBookService} from './money-book.service';
-import {MessageComponent} from './message.component';
+import { MdDialog, MD_DIALOG_DATA } from '@angular/material';
+import { Subject, sortSubjects, Item, MoneyBookService } from './money-book.service';
+import { MessageComponent } from './message.component';
 
 @Component({
   selector: 'mb-select-subjects-dialog',
   template: `
     <h1 md-dialog-title i18n>Select Subjects</h1>
     <md-dialog-content>
-      <div>
+      <div [formGroup]="sources">
         <ng-container i18n>From</ng-container>
-        <button md-button (click)="allSources(false)" i18n>None</button>
-        <button md-button (click)="allSources(true)" i18n>All</button>
-        <md-checkbox *ngFor="let subject of sources" [(ngModel)]="selectedSources[subject.id]">
+        <button type="button" md-button (click)="allSources(false)" i18n>None</button>
+        <button type="button" md-button (click)="allSources(true)" i18n>All</button>
+        <md-checkbox *ngFor="let subject of data.sources" [formControlName]="subject.id">
           {{subject.source}} {{subject.name}}
         </md-checkbox>
       </div>
-      <div>
+      <div [formGroup]="destinations">
         <ng-container i18n>To</ng-container>
-        <button md-button (click)="allDestinations(false)" i18n>None</button>
-        <button md-button (click)="allDestinations(true)" i18n>All</button>
-        <md-checkbox *ngFor="let subject of destinations" [(ngModel)]="selectedDestinations[subject.id]">
+        <button type="button" md-button (click)="allDestinations(false)" i18n>None</button>
+        <button type="button" md-button (click)="allDestinations(true)" i18n>All</button>
+        <md-checkbox *ngFor="let subject of data.destinations" [formControlName]="subject.id">
           {{subject.destination}} {{subject.name}}
         </md-checkbox>
       </div>
     </md-dialog-content>
     <md-dialog-actions>
-      <button md-icon-button md-dialog-close i18n-mdTootip mdTooltip="Close">
+      <button type="button" md-icon-button md-dialog-close i18n-mdTootip mdTooltip="Close">
         <md-icon>close</md-icon>
       </button>
     </md-dialog-actions>
@@ -51,15 +60,26 @@ import {MessageComponent} from './message.component';
   `]
 })
 export class SelectSubjectsDialog {
-  sources: Subject[];
-  selectedSources: {[id: number]: boolean};
-  destinations: Subject[];
-  selectedDestinations: {[id: number]: boolean};
+  sources: FormGroup;
+  destinations: FormGroup;
+  constructor(
+    private fb: FormBuilder,
+    @Inject(MD_DIALOG_DATA) public data: any
+  ) {
+    const build = (subjects, selected) => this.fb.group(subjects.reduce((map, x) => {
+      const control = this.fb.control(selected[x.id]);
+      control.valueChanges.subscribe(y => selected[x.id] = y);
+      map[x.id] = control;
+      return map;
+    }, {}));
+    this.sources = build(this.data.sources, this.data.selectedSources);
+    this.destinations = build(this.data.destinations, this.data.selectedDestinations);
+  }
   allSources(value: boolean) {
-    this.sources.forEach(x => this.selectedSources[x.id] = value);
+    this.data.sources.forEach(x => this.sources.get(`${x.id}`).setValue(value));
   }
   allDestinations(value: boolean) {
-    this.destinations.forEach(x => this.selectedDestinations[x.id] = value);
+    this.data.destinations.forEach(x => this.destinations.get(`${x.id}`).setValue(value));
   }
 }
 
@@ -126,23 +146,23 @@ function toYYYYMMDD(x: Date) {
     <div class="centerable">
       <div *ngIf="sources">
         <md-toolbar>
-          <button md-icon-button [disabled]="modified" (click)="month = month - 1" i18n-mdTooltip mdTooltip="Previous month">
+          <button type="button" md-icon-button [disabled]="modified" (click)="targetMonth.setValue(targetMonth.value - 1)" i18n-mdTooltip mdTooltip="Previous month">
             <md-icon>chevron_left</md-icon>
           </button>
           <md-input-container>
-            <input mdInput [(ngModel)]="year" type="number" class="year" required>
+            <input mdInput [formControl]="targetYear" type="number" class="year" required>
           </md-input-container>
           <md-input-container>
-            <input mdInput [(ngModel)]="month" type="number" class="month" required>
+            <input mdInput [formControl]="targetMonth" type="number" class="month" required>
           </md-input-container>
-          <button md-icon-button [disabled]="modified" (click)="month = month + 1" i18n-mdTooltip mdTooltip="Next month">
+          <button type="button" md-icon-button [disabled]="modified" (click)="targetMonth.setValue(targetMonth.value + 1)" i18n-mdTooltip mdTooltip="Next month">
             <md-icon>chevron_right</md-icon>
           </button>
           <span *ngIf="drilldown === null" class="app-toolbar-filler" i18n>Monthly Totals</span>
           <span *ngIf="drilldown !== null" class="app-toolbar-filler">
             <ng-container i18n>Daily Totals in</ng-container> {{categories[drilldown]}}
           </span>
-          <button md-icon-button (click)="settings()" i18n-mdTooltip mdTooltip="Settings">
+          <button type="button" md-icon-button (click)="settings()" i18n-mdTooltip mdTooltip="Settings">
             <md-icon>settings</md-icon>
           </button>
         </md-toolbar>
@@ -168,13 +188,17 @@ function toYYYYMMDD(x: Date) {
     }
   `]
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent {
   private messages: {[name: string]: string} = {};
   @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
     values.forEach(x => this.messages[x.name] = x.value);
   }
   waiting = true;
-  private _month = new Date();
+  private targetYear: FormControl;
+  private targetMonth: FormControl;
+  private targetAt(i: number, day = 1) {
+    return new Date(this.targetYear.value, this.targetMonth.value - 12 + i, day);
+  }
   private targetMonths = new RxSubject<number>();
   sources: Subject[];
   selectedSources: {[id: number]: boolean} = {};
@@ -189,14 +213,26 @@ export class DashboardComponent implements OnInit {
   private drilldown: null | number = null;
   constructor(
     private service: MoneyBookService,
+    private fb: FormBuilder,
     private route: ActivatedRoute,
     private router: Router,
     private dialog: MdDialog
   ) {
-    this._month.setDate(1);
-    this._month.setHours(0, 0, 0, 0);
-  }
-  ngOnInit() {
+    this.targetYear = this.fb.control(0);
+    this.targetMonth = this.fb.control(0);
+    const setTarget = x => {
+      x.setDate(1);
+      x.setHours(0, 0, 0, 0);
+      this.targetYear.setValue(x.getFullYear(), {emitEvent: false});
+      this.targetMonth.setValue(x.getMonth() + 1, {emitEvent: false});
+    };
+    setTarget(new Date());
+    const setAndNotifyTarget = x => {
+      setTarget(x);
+      this.targetMonths.next(x.getTime());
+    };
+    this.targetYear.valueChanges.subscribe(x => setAndNotifyTarget(new Date(x, this.targetMonth.value - 1)));
+    this.targetMonth.valueChanges.subscribe(x => setAndNotifyTarget(new Date(this.targetYear.value, x - 1)));
     const months = this.route.params.map(params => params['month']);
     months.filter(x => !x).subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date())], {replaceUrl: true}));
     const subjects = this.service.getSubjects().then(x => {
@@ -207,16 +243,15 @@ export class DashboardComponent implements OnInit {
     });
     months.filter(x => x).switchMap(x => {
       const xs = decodeURIComponent(x).split(',');
-      this._month = new Date(xs[0]);
-      this._month.setDate(1);
-      this._month.setHours(0, 0, 0, 0);
-      if (this.months && this._month.getTime() === this.months[11].getTime()) return [{
+      const month = new Date(xs[0]);
+      setTarget(month);
+      if (this.months && month.getTime() === this.months[11].getTime()) return [{
         drilldown: xs[1]
       }];
       this.waiting = true;
       return Observable.fromPromise(subjects.then(() => {
         const months: Date[] = [];
-        for (let i = 0; i < 12; ++i) months.push(new Date(this.year, this.month - 12 + i));
+        for (let i = 0; i < 12; ++i) months.push(this.targetAt(i));
         return this.service.getAllItemsPerMonth(months).then(x => ({
           months: months,
           items: x,
@@ -257,15 +292,15 @@ export class DashboardComponent implements OnInit {
       .concat(this.destinationTotals.drawDaily(index))
       .forEach((x, i) => this.chart.chart.addSingleSeriesAsDrilldown(e.originalEvent.points[i], x));
       this.chart.chart.applyDrilldown();
-      this.router.navigate(['/dashboard', `${toYYYYMM(this._month)},${index}`]);
+      this.router.navigate(['/dashboard', `${toYYYYMM(this.targetAt(11))},${index}`]);
     } else if (!this.navigated) {
       this.navigated = true;
-      this.router.navigate(['/items', toYYYYMMDD(new Date(this.year, this.month - 12 + this.drilldown, index + 1))]);
+      this.router.navigate(['/items', toYYYYMMDD(this.targetAt(this.drilldown, index + 1))]);
     }
   }
   chartDrillup(e: any) {
     this.drilldown = null;
-    this.router.navigate(['/dashboard', toYYYYMM(this._month)]);
+    this.router.navigate(['/dashboard', toYYYYMM(this.targetAt(11))]);
   }
   private draw() {
     const totals0 = new MonthlyTotals(this.messages['from'], 'source', this.sources.filter(x => this.selectedSources[x.id]), this.months);
@@ -352,30 +387,14 @@ export class DashboardComponent implements OnInit {
     this.drilldown = null;
     setTimeout(() => this.resize());
   }
-  private setMonth(value: Date) {
-    if (value === this._month) return;
-    this._month = value;
-    this.targetMonths.next(this._month.getTime());
-  }
-  get year() {
-    return this._month.getFullYear();
-  }
-  set year(value: number) {
-    this.setMonth(new Date(value, this.month - 1));
-  }
-  get month() {
-    return this._month.getMonth() + 1;
-  }
-  set month(value: number) {
-    this.setMonth(new Date(this.year, value - 1));
-  }
   settings() {
-    const dialogRef = this.dialog.open(SelectSubjectsDialog);
-    const select = dialogRef.componentInstance;
-    select.sources = this.sources;
-    select.selectedSources = this.selectedSources;
-    select.destinations = this.destinations;
-    select.selectedDestinations = this.selectedDestinations;
-    dialogRef.afterClosed().subscribe(result => this.draw());
+    this.dialog.open(SelectSubjectsDialog, {
+      data: {
+        sources: this.sources,
+        selectedSources: this.selectedSources,
+        destinations: this.destinations,
+        selectedDestinations: this.selectedDestinations
+      }
+    }).afterClosed().subscribe(result => this.draw());
   }
 }

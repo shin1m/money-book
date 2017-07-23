@@ -1,6 +1,6 @@
-import {Component, OnDestroy} from '@angular/core';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Subject, Item, MoneyBookService} from './money-book.service';
+import { Component, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { Subject, Item, MoneyBookService } from './money-book.service';
 
 @Component({
   template: `

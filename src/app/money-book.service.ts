@@ -1,5 +1,5 @@
-import {Injectable, NgZone} from '@angular/core';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 export class Subject {
   id: number;

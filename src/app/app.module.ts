@@ -9,7 +9,7 @@ import {
   QueryList,
   ViewChildren
 } from '@angular/core';
-import {FormsModule} from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import {
   ActivatedRoute,
   ActivatedRouteSnapshot,
@@ -19,24 +19,24 @@ import {
   RouterModule,
   RouterStateSnapshot
 } from '@angular/router';
-import {BrowserModule} from '@angular/platform-browser';
-import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {Subscription} from 'rxjs/Subscription';
+import { BrowserModule } from '@angular/platform-browser';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { Subscription } from 'rxjs/Subscription';
 import 'rxjs/add/operator/do';
 import 'rxjs/add/operator/filter';
 import 'rxjs/add/operator/first';
-import {MaterialModule} from '@angular/material';
-import {HighchartsStatic} from 'angular2-highcharts/dist/HighchartsService';
-import {ChartModule} from 'angular2-highcharts';
-import {MyDatePickerModule} from 'mydatepicker';
-import {MoneyBookService, GoogleDriveMoneyBookService} from './money-book.service';
-import {CanDeactivateGuard} from './can-deactivate-guard.service';
-import {MessageComponent} from './message.component';
-import {SubjectsComponent} from './subjects.component';
-import {SelectSubjectComponent, ItemsComponent} from './items.component';
-import {SelectSubjectsDialog, DashboardComponent} from './dashboard.component';
-import {ImportCSVComponent} from './importcsv.component';
-import {ExportCSVComponent} from './exportcsv.component';
+import { MaterialModule } from '@angular/material';
+import { HighchartsStatic } from 'angular2-highcharts/dist/HighchartsService';
+import { ChartModule } from 'angular2-highcharts';
+import { MyDatePickerModule } from 'mydatepicker';
+import { MoneyBookService, GoogleDriveMoneyBookService } from './money-book.service';
+import { CanDeactivateGuard } from './can-deactivate-guard.service';
+import { MessageComponent } from './message.component';
+import { SubjectsComponent } from './subjects.component';
+import { SelectSubjectComponent, ItemsComponent } from './items.component';
+import { SelectSubjectsDialog, DashboardComponent } from './dashboard.component';
+import { ImportCSVComponent } from './importcsv.component';
+import { ExportCSVComponent } from './exportcsv.component';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -174,7 +174,7 @@ export function highchartsFactory() {
 
 @NgModule({
   imports: [
-    FormsModule,
+    ReactiveFormsModule,
     BrowserModule,
     BrowserAnimationsModule,
     /*ChartModule.forRoot(

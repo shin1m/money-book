@@ -1,5 +1,5 @@
-import {Component} from '@angular/core';
-import {Subject, Item, MoneyBookService} from './money-book.service';
+import { Component} from '@angular/core';
+import { Subject, Item, MoneyBookService } from './money-book.service';
 
 @Component({
   template: `
