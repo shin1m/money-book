@@ -1,16 +1,17 @@
-import {Injectable, NgZone} from '@angular/core';
-import {BehaviorSubject} from 'rxjs/BehaviorSubject';
+/// <reference types="@types/gapi" />
+//
+import { Injectable, NgZone } from '@angular/core';
+import { BehaviorSubject } from 'rxjs';
 
 export class Subject {
-  id: number;
-  name = '';
-  source = '';
-  destination = '';
-  revoked = false;
-  constructor() {}
+  public id = 0;
+  public name = '';
+  public source = '';
+  public destination = '';
+  public revoked = false;
 }
 
-export function sortSubjects(subjects: Subject[], mnemonic: string) {
+export function sortSubjects(subjects: Subject[], mnemonic: keyof Subject) {
   return subjects.filter(x => x[mnemonic] !== '').sort((x, y) => {
     const a = x[mnemonic];
     const b = y[mnemonic];
@@ -18,18 +19,18 @@ export function sortSubjects(subjects: Subject[], mnemonic: string) {
   }).concat(subjects.filter(x => x[mnemonic] === ''));
 }
 
-export class Item {
+export interface Item {
   source: number;
   destination: number;
   amount: number;
   description: string;
-  constructor() {}
 }
 
 @Injectable()
 export abstract class MoneyBookService {
   isSignedIn = new BehaviorSubject<null | boolean>(null);
-  abstract sign(which: string): void;
+  abstract signIn(): void;
+  abstract signOut(): void;
   protected toMonth(x: Date) {
     const pad = (x: number) => `${x < 10 ? '0' : ''}${x}`;
     return `${x.getFullYear()}${pad(x.getMonth() + 1)}`;
@@ -79,11 +80,14 @@ export class TestMoneyBookService extends MoneyBookService {
     }
     setTimeout(() => this.isSignedIn.next(false), 1000);
   }
-  sign(which: string) {
-    setTimeout(() => this.isSignedIn.next(which === 'In'), 1000);
+  signIn() {
+    setTimeout(() => this.isSignedIn.next(true), 1000);
+  }
+  signOut() {
+    setTimeout(() => this.isSignedIn.next(false), 1000);
   }
   getSubjects() {
-    return new Promise(resolve => setTimeout(() => {
+    return new Promise<Subject[]>(resolve => setTimeout(() => {
       resolve(<Subject[]>JSON.parse(this.subjects));
     }, 1000));
   }
@@ -95,7 +99,7 @@ export class TestMoneyBookService extends MoneyBookService {
   }
   getAllItems() {
     const pad = (x: number) => `${x < 10 ? '0' : ''}${x}`;
-    return new Promise(resolve => setTimeout(() => {
+    return new Promise<{date: string, items: Item[]}[]>(resolve => setTimeout(() => {
       const months: any[] = [];
       for (const month in this.items) months.push(month);
       months.sort();
@@ -108,7 +112,7 @@ export class TestMoneyBookService extends MoneyBookService {
     }, 1000));
   }
   getItems(date: Date) {
-    return new Promise(resolve => setTimeout(() => {
+    return new Promise<Item[]>(resolve => setTimeout(() => {
       const daily = this.items[this.toMonth(date)];
       const items = (daily ? daily : [])[date.getDate()];
       resolve(items ? <Item[]>JSON.parse(items) : []);
@@ -127,7 +131,7 @@ export class TestMoneyBookService extends MoneyBookService {
     }, 1000));
   }
   getAllItemsPerMonth(months: Date[]) {
-    return new Promise(resolve => setTimeout(() => resolve(months.map(x => {
+    return new Promise<Item[][][]>(resolve => setTimeout(() => resolve(months.map(x => {
       const daily = this.items[this.toMonth(x)];
       return daily ? daily.map(x => <Item[]>JSON.parse(x)) : [];
     })), 1000));
@@ -142,38 +146,59 @@ function tryOrBackoff<T>(action: () => Promise<T>, delay: number): Promise<T> {
   });
 }
 
-declare var gapi: any;
+declare var google: any;
 
 const CLIENT_ID = '243896661130-h89kibrpsj30pnjs89pl144jutkbrebh.apps.googleusercontent.com';
 
 @Injectable()
 export class GoogleDriveMoneyBookService extends MoneyBookService {
+  tokenClient: any;
   constructor(private zone: NgZone) {
     super();
-    this.zone.runOutsideAngular(() => gapi.load('client:auth2', () => gapi.client.init({
+    this.zone.runOutsideAngular(() => gapi.load('client', () => gapi.client.init({
       discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'],
-      clientId: CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/drive.appdata'
     }).then(() => {
-      gapi.auth2.getAuthInstance().isSignedIn.listen((x: boolean) => this.isSignedInChanged(x));
-      this.isSignedInChanged(gapi.auth2.getAuthInstance().isSignedIn.get());
+      this.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/drive.appdata',
+        callback: (response: any) => this.isSignedInChanged(gapi.client.getToken() !== null)
+      });
+      this.isSignedInChanged(gapi.client.getToken() !== null);
     })));
   }
-  sign(which: string) {
-    this.zone.runOutsideAngular(() => gapi.auth2.getAuthInstance()['sign' + which]());
+  signIn() {
+    this.zone.runOutsideAngular(() => this.tokenClient.requestAccessToken());
+  }
+  signOut() {
+    this.zone.runOutsideAngular(() => {
+      const token = gapi.client.getToken();
+      if (!token) return;
+      google.accounts.oauth2.revoke(token.access_token);
+      gapi.client.setToken(null);
+      this.isSignedInChanged(false);
+    });
   }
   private isSignedInChanged(value: boolean) {
     this.zone.run(() => this.isSignedIn.next(value));
   }
+  private tryOrBackoff<T>(action: () => Promise<T>, delay: number): Promise<T> {
+    return tryOrBackoff(action, delay).then(undefined, x => x.result.error.code === 401 || x.result.error.code === 403 && x.result.error.status === 'PERMISSION_DENIED' ? new Promise<void>(resolve => {
+      this.tokenClient.callback = (response: any) => {
+        this.isSignedInChanged(gapi.client.getToken() !== null);
+        resolve();
+      }
+      this.tokenClient.requestAccessToken();
+    }).then(() => tryOrBackoff(action, delay)) : Promise.reject(x));
+  }
   private getJSONByName(name: string) {
-    return tryOrBackoff(() => gapi.client.drive.files.list({
+    return this.tryOrBackoff(() => (<any>gapi.client).drive.files.list({
       spaces: 'appDataFolder',
       q: `name = '${name}'`,
       fields: 'files(description)'
     }), 100).then((x: any) => x.result.files.length > 0 ? JSON.parse(x.result.files[0].description) : null);
   }
   private putJSONByName(name: string, value: any) {
-    return tryOrBackoff(() => gapi.client.drive.files.list({
+    return this.tryOrBackoff(() => (<any>gapi.client).drive.files.list({
       spaces: 'appDataFolder',
       q: `name = '${name}'`,
       fields: 'files(id, name)'
@@ -181,12 +206,12 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
       if (!value) return files;
       if (files.length > 0) {
         const id = files.shift().id;
-        return tryOrBackoff(() => gapi.client.drive.files.update({
+        return this.tryOrBackoff(() => (<any>gapi.client).drive.files.update({
           fileId: id,
           description: JSON.stringify(value)
         }), 100).then(() => files);
       } else {
-        return tryOrBackoff(() => gapi.client.drive.files.create({
+        return this.tryOrBackoff(() => (<any>gapi.client).drive.files.create({
           parents: ['appDataFolder'],
           name: name,
           mimeType: 'application/vnd.google-apps.drive-sdk',
@@ -194,7 +219,7 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
         }), 100).then(() => files);
       }
     }).then(files => files.reduce((promise: Promise<void>, x: any) =>
-      promise.then(() => tryOrBackoff(() => gapi.client.drive.files.delete({fileId: x.id}), 100))
+      promise.then(() => this.tryOrBackoff(() => (<any>gapi.client).drive.files.delete({fileId: x.id}), 100))
     , Promise.resolve()));
   }
   private runOutside<T>(action: () => Promise<T>) {
@@ -215,7 +240,7 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
   getAllItems() {
     return this.runOutside(() => {
       const items: {date: string, items: Item[]}[] = [];
-      const list = (token?: string): Promise<{date: string, items: Item[]}[]> => tryOrBackoff(() => gapi.client.drive.files.list({
+      const list = (token?: string): Promise<{date: string, items: Item[]}[]> => this.tryOrBackoff(() => (<any>gapi.client).drive.files.list({
         spaces: 'appDataFolder',
         q: `name contains 'items'`,
         orderBy: 'name',
@@ -245,7 +270,7 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
   getAllItemsPerMonth(months: Date[]) {
     return this.runOutside(() => {
       const yms = months.map(x => this.toMonth(x));
-      return tryOrBackoff(() => gapi.client.drive.files.list({
+      return this.tryOrBackoff(() => (<any>gapi.client).drive.files.list({
         spaces: 'appDataFolder',
         q: yms.map(x => `name contains 'items${x}'`).join(' or '),
         pageSize: 1000,

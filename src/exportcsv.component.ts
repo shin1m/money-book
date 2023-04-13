@@ -1,26 +1,26 @@
-import {Component, OnDestroy} from '@angular/core';
-import {DomSanitizer, SafeUrl} from '@angular/platform-browser';
-import {Subject, Item, MoneyBookService} from './money-book.service';
+import { Component, OnDestroy } from '@angular/core';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { MoneyBookService } from './money-book.service';
 
 @Component({
   template: `
     <div class="centerable">
       <div>
-        <button md-button (click)="exportSubjects()" i18n>Export Subjects</button>
-        <a md-button *ngIf="subjects" [href]="subjects" download="subjects.csv" i18n>Save</a>
+        <button mat-button (click)="exportSubjects()" i18n>Export Subjects</button>
+        <a mat-button *ngIf="subjects" [href]="subjects" download="subjects.csv" i18n>Save</a>
       </div>
       <div>
-        <button md-button (click)="exportItems()" i18n>Export Items</button>
-        <a md-button *ngIf="items" [href]="items" download="items.csv" i18n>Save</a>
+        <button mat-button (click)="exportItems()" i18n>Export Items</button>
+        <a mat-button *ngIf="items" [href]="items" download="items.csv" i18n>Save</a>
       </div>
-      <md-spinner *ngIf="waiting" class="center"></md-spinner>
+      <mat-spinner *ngIf="waiting" class="center"></mat-spinner>
     </div>
   `
 })
-export class ExportCSVComponent {
+export class ExportCSVComponent implements OnDestroy {
   waiting = false;
-  subjects: SafeUrl;
-  items: SafeUrl;
+  subjects?: SafeUrl;
+  items?: SafeUrl;
   constructor(private service: MoneyBookService, private sanitizer: DomSanitizer) {}
   ngOnDestroy() {
     if (this.subjects) URL.revokeObjectURL(this.subjects.toString());
@@ -30,7 +30,7 @@ export class ExportCSVComponent {
     this.waiting = true;
     if (this.subjects) {
       URL.revokeObjectURL(this.subjects.toString());
-      this.subjects = null;
+      this.subjects = undefined;
     }
     this.service.getSubjects().then(x => {
       this.subjects = this.sanitizer.bypassSecurityTrustUrl(
@@ -46,7 +46,7 @@ export class ExportCSVComponent {
     this.waiting = true;
     if (this.items) {
       URL.revokeObjectURL(this.items.toString());
-      this.items = null;
+      this.items = undefined;
     }
     this.service.getAllItems().then(x => {
       const items: string[] = [];

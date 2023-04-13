@@ -5,7 +5,6 @@ This is a demo application using Angular, Google APIs, and so on.
 * Try it (requires signing in with a Google account)
   * [English](https://shin1m.github.io/money-book/en/)
   * [Japanese](https://shin1m.github.io/money-book/ja/)
-* [Try it in Plunker](https://plnkr.co/edit/gAzYav)
 
 
 ## Features
@@ -22,17 +21,18 @@ This is a demo application using Angular, Google APIs, and so on.
 
 * [Angular](https://angular.io)
 * [Angular Material](https://material.angular.io)
-* [Google API Client Libraries](https://developers.google.com/api-client-library/)
-* [Google Drive APIs](https://developers.google.com/drive/)
-* [angular2-highcharts](https://github.com/gevgeny/angular2-highcharts)
+* [Google Identity Services](https://developers.google.com/identity)
+* [Google API Client Libraries](https://developers.google.com/api-client-library)
+* [Google Drive APIs](https://developers.google.com/drive)
 * [Highcharts](http://www.highcharts.com)
+* [highcharts-angular](https://github.com/highcharts/highcharts-angular)
 
 
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2017 Shin-ichi MORITA
+Copyright (c) Shin-ichi MORITA
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

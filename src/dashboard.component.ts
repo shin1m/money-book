@@ -1,60 +1,65 @@
-import {Component, HostListener, OnInit, QueryList, ViewChild, ViewChildren} from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Observable} from 'rxjs/Observable';
-import {Subject as RxSubject} from 'rxjs/Subject';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/switchMap';
-import {MdDialog} from '@angular/material';
-import {Subject, sortSubjects, Item, MoneyBookService} from './money-book.service';
-import {MessageComponent} from './message.component';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  Subject as RxSubject,
+  from,
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map,
+  switchMap
+} from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import * as Highcharts from 'highcharts';
+import HCDrilldown from 'highcharts/modules/drilldown';
+HCDrilldown(Highcharts);
+import { Subject, sortSubjects, Item, MoneyBookService } from './money-book.service';
 
 @Component({
   selector: 'mb-select-subjects-dialog',
   template: `
-    <h1 md-dialog-title i18n>Select Subjects</h1>
-    <md-dialog-content>
+    <h1 mat-dialog-title i18n>Select Subjects</h1>
+    <mat-dialog-content>
       <div>
         <ng-container i18n>From</ng-container>
-        <button md-button (click)="allSources(false)" i18n>None</button>
-        <button md-button (click)="allSources(true)" i18n>All</button>
-        <md-checkbox *ngFor="let subject of sources" [(ngModel)]="selectedSources[subject.id]">
+        <button mat-button (click)="allSources(false)" i18n>None</button>
+        <button mat-button (click)="allSources(true)" i18n>All</button>
+        <mat-checkbox *ngFor="let subject of sources" [(ngModel)]="selectedSources[subject.id]">
           {{subject.source}} {{subject.name}}
-        </md-checkbox>
+        </mat-checkbox>
       </div>
       <div>
         <ng-container i18n>To</ng-container>
-        <button md-button (click)="allDestinations(false)" i18n>None</button>
-        <button md-button (click)="allDestinations(true)" i18n>All</button>
-        <md-checkbox *ngFor="let subject of destinations" [(ngModel)]="selectedDestinations[subject.id]">
+        <button mat-button (click)="allDestinations(false)" i18n>None</button>
+        <button mat-button (click)="allDestinations(true)" i18n>All</button>
+        <mat-checkbox *ngFor="let subject of destinations" [(ngModel)]="selectedDestinations[subject.id]">
           {{subject.destination}} {{subject.name}}
-        </md-checkbox>
+        </mat-checkbox>
       </div>
-    </md-dialog-content>
-    <md-dialog-actions>
-      <button md-icon-button md-dialog-close i18n-mdTootip mdTooltip="Close">
-        <md-icon>close</md-icon>
+    </mat-dialog-content>
+    <mat-dialog-actions>
+      <button mat-icon-button mat-dialog-close i18n-matTootip matTooltip="Close">
+        <mat-icon>close</mat-icon>
       </button>
-    </md-dialog-actions>
+    </mat-dialog-actions>
   `,
   styles: [`
-    md-dialog-content > div {
+    mat-dialog-content > div {
       display: inline-block;
     }
-    md-checkbox {
+    mat-checkbox {
       display: block;
     }
-    md-dialog-actions {
+    mat-dialog-actions {
       text-align: right;
     }
   `]
 })
 export class SelectSubjectsDialog {
-  sources: Subject[];
-  selectedSources: {[id: number]: boolean};
-  destinations: Subject[];
-  selectedDestinations: {[id: number]: boolean};
+  sources!: Subject[];
+  selectedSources!: {[id: number]: boolean};
+  destinations!: Subject[];
+  selectedDestinations!: {[id: number]: boolean};
   allSources(value: boolean) {
     this.sources.forEach(x => this.selectedSources[x.id] = value);
   }
@@ -79,10 +84,10 @@ class MonthlyTotals {
   ) {
     this.daily = months.map(x => []);
     this.subjects.forEach(x => {
-      this.monthly[x.id] = Array<number>(months.length).fill(null);
+      this.monthly[x.id] = Array<number>(months.length).fill(0);
       months.forEach((y, i) => {
         const n = new Date(y.getFullYear(), y.getMonth() + 1, 0).getDate();
-        this.daily[i][x.id] = Array<number>(n).fill(null);
+        this.daily[i][x.id] = Array<number>(n).fill(0);
       });
     });
   }
@@ -91,12 +96,13 @@ class MonthlyTotals {
     this.daily[month][subject][date - 1] += amount;
   }
   private draw(series: Series, name: (i: number) => string) {
-    return this.subjects.map(x => ({
+    return this.subjects.map(x => (<Highcharts.SeriesColumnOptions><unknown>{
+      type: 'column',
       name: `${this.prefix} ${x.name}`,
       stack: this.stack,
       data: series[x.id].map((y, i) => ({
         name: name(i),
-        y: y,
+        y,
         drilldown: true
       }))
     }));
@@ -121,46 +127,49 @@ function toYYYYMMDD(x: Date) {
 
 @Component({
   template: `
-    <mb-message name="from" i18n>From</mb-message>
-    <mb-message name="to" i18n>To</mb-message>
     <div class="centerable">
       <div *ngIf="sources">
-        <md-toolbar>
-          <button md-icon-button [disabled]="modified" (click)="month = month - 1" i18n-mdTooltip mdTooltip="Previous month">
-            <md-icon>chevron_left</md-icon>
+        <mat-toolbar>
+          <button mat-icon-button (click)="month = month - 1" i18n-matTooltip matTooltip="Previous month">
+            <mat-icon>chevron_left</mat-icon>
           </button>
-          <md-input-container>
-            <input mdInput [(ngModel)]="year" type="number" class="year" required>
-          </md-input-container>
-          <md-input-container>
-            <input mdInput [(ngModel)]="month" type="number" class="month" required>
-          </md-input-container>
-          <button md-icon-button [disabled]="modified" (click)="month = month + 1" i18n-mdTooltip mdTooltip="Next month">
-            <md-icon>chevron_right</md-icon>
+          <mat-form-field class="year">
+            <input matInput [(ngModel)]="year" type="number" required>
+          </mat-form-field>
+          <mat-form-field class="month">
+            <input matInput [(ngModel)]="month" type="number" required>
+          </mat-form-field>
+          <button mat-icon-button (click)="month = month + 1" i18n-matTooltip matTooltip="Next month">
+            <mat-icon>chevron_right</mat-icon>
           </button>
-          <span *ngIf="drilldown === null" class="app-toolbar-filler" i18n>Monthly Totals</span>
-          <span *ngIf="drilldown !== null" class="app-toolbar-filler">
+          <span *ngIf="!drilldown" class="app-toolbar-filler" i18n>Monthly Totals</span>
+          <span *ngIf="drilldown" class="app-toolbar-filler">
             <ng-container i18n>Daily Totals in</ng-container> {{categories[drilldown]}}
           </span>
-          <button md-icon-button (click)="settings()" i18n-mdTooltip mdTooltip="Settings">
-            <md-icon>settings</md-icon>
+          <button mat-icon-button (click)="settings()" i18n-matTooltip matTooltip="Settings">
+            <mat-icon>settings</mat-icon>
           </button>
-        </md-toolbar>
-        <chart [options]="options" (drilldown)="chartDrilldown($event)" (drillup)="chartDrillup($event)" #chart></chart>
+        </mat-toolbar>
+        <highcharts-chart [Highcharts]="Highcharts" [options]="options" (chartInstance)="chartInstance($event)" #chart></highcharts-chart>
       </div>
-      <md-spinner *ngIf="waiting" class="center"></md-spinner>
+      <mat-spinner *ngIf="waiting" class="center"></mat-spinner>
     </div>
   `,
   styles: [`
-    chart {
+    highcharts-chart {
       display: block;
+      height: 75vh;
     }
-    input.year {
-      width: 3em;
+    .year {
+      width: 6em;
+    }
+    .year input {
       text-align: right;
     }
-    input.month {
-      width: 2em;
+    .month {
+      width: 5em;
+    }
+    .month input {
       text-align: right;
     }
     .app-toolbar-filler {
@@ -169,52 +178,128 @@ function toYYYYMMDD(x: Date) {
   `]
 })
 export class DashboardComponent implements OnInit {
-  private messages: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.messages[x.name] = x.value);
-  }
   waiting = true;
   private _month = new Date();
   private targetMonths = new RxSubject<number>();
-  sources: Subject[];
+  sources?: Subject[];
   selectedSources: {[id: number]: boolean} = {};
-  destinations: Subject[];
+  destinations!: Subject[];
   selectedDestinations: {[id: number]: boolean} = {};
-  private months: Date[];
-  private items: Item[][][];
-  private categories: string[];
-  private sourceTotals: MonthlyTotals;
-  private destinationTotals: MonthlyTotals;
-  options: Object;
-  private drilldown: null | number = null;
+  private months!: Date[];
+  private items!: Item[][][];
+  categories!: string[];
+  private sourceTotals!: MonthlyTotals;
+  private destinationTotals!: MonthlyTotals;
+  Highcharts: typeof Highcharts = Highcharts;
+  options: Highcharts.Options = {
+    chart: {
+      animation: false,
+      type: 'column',
+      zooming: {
+        type: 'xy'
+      },
+      events: {}
+    },
+    credits: {
+      enabled: false
+    },
+    title: {
+      text: undefined
+    },
+    legend: {
+      enabled: false
+    },
+    plotOptions: {
+      column: {stacking: 'normal'}
+    },
+    xAxis: {
+      type: 'category',
+      crosshair: true
+    },
+    yAxis: {
+      title: {text: null}
+    },
+    tooltip: {
+      formatter(): string {
+        const list = (points: Highcharts.TooltipFormatterContextObject[]) => {
+          points = points.filter(x => x.y !== null);
+          return `
+            <td>
+              ${points.map(x => `
+                <div>
+                  <span style="color: ${x.color};">\u25CF</span>
+                  ${x.series.name}:
+                </div>
+              `).join('')}
+            </td>
+            <td style="text-align: right;">
+              ${points.map(x => `<div><b>${x.y}</b></div>`).join('')}
+            </td>
+          `;
+        };
+        const points = this.points!;
+        const left = points.filter(x => x.series.userOptions.stack === 'source');
+        const right = points.filter(x => x.series.userOptions.stack === 'destination');
+        return `
+          <div><b>${points[0].key}</b></div>
+          <table>
+            <tr>
+              ${list(left)}
+              <td><span style="margin: 0.5em;">&rarr;</span></td>
+              ${list(right)}
+            </tr>
+            <tr>
+              <td></td><td></td><td></td><td></td>
+              <td style="text-align: right;">
+                <b>${left.reduce((value, x) => value + x.y!, 0)}</b>
+              </td>
+            </tr>
+          </table>
+        `;
+      },
+      shared: true,
+      useHTML: true
+    },
+    drilldown: {
+      allowPointDrilldown: false,
+      animation: false,
+      breadcrumbs: {
+        showFullPath: false,
+        format: $localize `Back to Monthly Totals`
+      }
+    }
+  };
+  drilldown?: number;
   constructor(
     private service: MoneyBookService,
     private route: ActivatedRoute,
     private router: Router,
-    private dialog: MdDialog
+    private dialog: MatDialog
   ) {
-    this._month.setDate(1);
-    this._month.setHours(0, 0, 0, 0);
+    this.options.chart!.events!.drilldown = e => this.chartDrilldown(e);
+    this.options.chart!.events!.drillup = e => {
+      this.drilldown = undefined;
+      this.router.navigate(['/dashboard', toYYYYMM(this._month)]);
+    };
   }
   ngOnInit() {
-    const months = this.route.params.map(params => params['month']);
-    months.filter(x => !x).subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date())], {replaceUrl: true}));
+    const months = this.route.params.pipe(map(params => params['month']));
+    months.pipe(filter(x => !x)).subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date())], {replaceUrl: true}));
     const subjects = this.service.getSubjects().then(x => {
       this.sources = sortSubjects(x, 'source');
       this.sources.forEach(x => this.selectedSources[x.id] = x.source !== '');
       this.destinations = sortSubjects(x, 'destination');
       this.destinations.forEach(x => this.selectedDestinations[x.id] = x.destination !== '');
     });
-    months.filter(x => x).switchMap(x => {
+    months.pipe(filter(x => x), switchMap(x => {
       const xs = decodeURIComponent(x).split(',');
       this._month = new Date(xs[0]);
-      this._month.setDate(1);
       this._month.setHours(0, 0, 0, 0);
       if (this.months && this._month.getTime() === this.months[11].getTime()) return [{
         drilldown: xs[1]
       }];
       this.waiting = true;
-      return Observable.fromPromise(subjects.then(() => {
+      return from(subjects.then(() => {
         const months: Date[] = [];
         for (let i = 0; i < 12; ++i) months.push(new Date(this.year, this.month - 12 + i));
         return this.service.getAllItemsPerMonth(months).then(x => ({
@@ -223,53 +308,50 @@ export class DashboardComponent implements OnInit {
           drilldown: xs[1]
         }));
       }));
-    }).subscribe((x: {
-      months: Date[],
-      items: Item[][][],
+    })).subscribe((x: {
+      months?: Date[],
+      items?: Item[][][],
       drilldown: string
     }) => {
       if (x.months) {
         this.months = x.months;
         this.categories = this.months.map(toYYYYMM);
-        this.items = x.items;
+        this.items = x.items!;
         this.draw();
         this.waiting = false;
       }
       if (x.drilldown) {
         const drilldown = +x.drilldown;
-        if (drilldown !== this.drilldown) setTimeout(() => this.chart.chart.series[0].data[drilldown].firePointEvent('click'));
+        if (drilldown !== this.drilldown) setTimeout(() => this.chart.xAxis[0].drilldownCategory(drilldown));
       } else {
-        if (this.drilldown !== null) this.chart.chart.drillUp();
+        if (this.drilldown) this.chart.drillUp();
       }
     });
-    this.targetMonths.debounceTime(500).distinctUntilChanged().subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date(x))]));
+    this.targetMonths.pipe(debounceTime(500), distinctUntilChanged()).subscribe(x => this.router.navigate(['/dashboard', toYYYYMM(new Date(x))]));
   }
-  @ViewChild('chart') chart: any;
-  @HostListener('window:resize') resize() {
-    if (this.chart && this.chart.chart) this.chart.chart.reflow();
+  private chart!: Highcharts.Chart;
+  chartInstance(value: Highcharts.Chart) {
+    this.chart = value;
   }
   private navigated = false;
-  chartDrilldown(e: any) {
-    const index = e.originalEvent.category;
-    if (this.drilldown === null) {
+  chartDrilldown(e: Highcharts.DrilldownEventObject) {
+    const index = e.category!;
+    if (!this.drilldown) {
       this.drilldown = index;
       this.sourceTotals.drawDaily(index)
       .concat(this.destinationTotals.drawDaily(index))
-      .forEach((x, i) => this.chart.chart.addSingleSeriesAsDrilldown(e.originalEvent.points[i], x));
-      this.chart.chart.applyDrilldown();
+      .forEach((x, i) => (<any>this.chart).addSingleSeriesAsDrilldown((<Highcharts.Point[]>e.points)[i], x));
+      (<any>this.chart).applyDrilldown();
       this.router.navigate(['/dashboard', `${toYYYYMM(this._month)},${index}`]);
     } else if (!this.navigated) {
       this.navigated = true;
       this.router.navigate(['/items', toYYYYMMDD(new Date(this.year, this.month - 12 + this.drilldown, index + 1))]);
     }
   }
-  chartDrillup(e: any) {
-    this.drilldown = null;
-    this.router.navigate(['/dashboard', toYYYYMM(this._month)]);
-  }
   private draw() {
-    const totals0 = new MonthlyTotals(this.messages['from'], 'source', this.sources.filter(x => this.selectedSources[x.id]), this.months);
-    const totals1 = new MonthlyTotals(this.messages['to'], 'destination', this.destinations.filter(x => this.selectedDestinations[x.id]), this.months);
+    if (this.drilldown) this.chart.drillUp();
+    const totals0 = new MonthlyTotals($localize `From`, 'source', this.sources!.filter(x => this.selectedSources[x.id]), this.months);
+    const totals1 = new MonthlyTotals($localize `To`, 'destination', this.destinations.filter(x => this.selectedDestinations[x.id]), this.months);
     this.items.forEach((x, i) => x.forEach((x, j) => {
       x.filter(x => this.selectedSources[x.source] && this.selectedDestinations[x.destination]).forEach(x => {
         totals0.add(i, j, x.source, x.amount);
@@ -278,82 +360,11 @@ export class DashboardComponent implements OnInit {
     }));
     this.sourceTotals = totals0;
     this.destinationTotals = totals1;
-    this.options = {
-      chart: {
-        animation: false,
-        type: 'column',
-        zoomType: 'xy'
-      },
-      credits: {
-        enabled: false
-      },
-      title: {
-        text: null
-      },
-      legend: {
-        enabled: false
-      },
-      plotOptions: {
-        column: {stacking: 'normal'}
-      },
-      xAxis: {
-        type: 'category',
-        crosshair: true
-      },
-      yAxis: {
-        title: {text: null}
-      },
-      tooltip: {
-        formatter: function() {
-          const list = (points: any[]) => {
-            points = points.filter(x => x.y !== null);
-            return `
-              <td>
-                ${points.map(x => `
-                  <div>
-                    <span style="color: ${x.color};">\u25CF</span>
-                    ${x.series.name}:
-                  </div>
-                `).join('')}
-              </td>
-              <td style="text-align: right;">
-                ${points.map(x => `<div><b>${x.y}</b></div>`).join('')}
-              </td>
-            `;
-          };
-          const left = this.points.filter((x: any) => x.series.columnIndex === 0)
-          const right = this.points.filter((x: any) => x.series.columnIndex !== 0)
-          return `
-            <div><b>${this.points[0].key}</b></div>
-            <table>
-              <tr>
-                ${list(left)}
-                <td><span style="margin: 0.5em;">&rarr;</span></td>
-                ${list(right)}
-              </tr>
-              <tr>
-                <td></td><td></td><td></td><td></td>
-                <td style="text-align: right;">
-                  <b>${left.reduce((value: number, x: any) => value + x.y, 0)}</b>
-                </td>
-              </tr>
-            </table>
-          `;
-        },
-        shared: true,
-        useHTML: true
-      },
-      series: this.sourceTotals.drawMonthly(this.categories).concat(this.destinationTotals.drawMonthly(this.categories)),
-      drilldown: {
-        allowPointDrilldown: false,
-        animation: false
-      }
-    };
-    this.drilldown = null;
-    setTimeout(() => this.resize());
+    [...this.chart.series].forEach(x => x.remove(false));
+    this.sourceTotals.drawMonthly(this.categories).concat(this.destinationTotals.drawMonthly(this.categories)).forEach(x => this.chart.addSeries(x, false));
+    this.chart.redraw();
   }
   private setMonth(value: Date) {
-    if (value === this._month) return;
     this._month = value;
     this.targetMonths.next(this._month.getTime());
   }
@@ -372,7 +383,7 @@ export class DashboardComponent implements OnInit {
   settings() {
     const dialogRef = this.dialog.open(SelectSubjectsDialog);
     const select = dialogRef.componentInstance;
-    select.sources = this.sources;
+    select.sources = this.sources!;
     select.selectedSources = this.selectedSources;
     select.destinations = this.destinations;
     select.selectedDestinations = this.selectedDestinations;

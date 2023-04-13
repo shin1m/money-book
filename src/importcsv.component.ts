@@ -1,21 +1,21 @@
-import {Component} from '@angular/core';
-import {Subject, Item, MoneyBookService} from './money-book.service';
+import { Component } from '@angular/core';
+import { Subject, Item, MoneyBookService } from './money-book.service';
 
 @Component({
   template: `
     <div>
-      <input type="file" hidden (change)="importSubjects($event.target.files)" #subjects>
-      <button md-button (click)="subjects.click()" i18n>Import Subjects</button>
+      <input type="file" hidden (change)="importSubjects($event.target!)" #subjects>
+      <button mat-button (click)="subjects.click()" i18n>Import Subjects</button>
     </div>
     <div>
-      <input type="file" hidden (change)="importItems($event.target.files)" #items>
-      <button md-button (click)="items.click()" i18n>Import Items</button>
+      <input type="file" hidden (change)="importItems($event.target!)" #items>
+      <button mat-button (click)="items.click()" i18n>Import Items</button>
     </div>
     <pre>{{result}}</pre>
   `
 })
 export class ImportCSVComponent {
-  result: string;
+  result = '';
   constructor(private service: MoneyBookService) {}
   private parse<T>(files: FileList, create: (lines: string[]) => T): Promise<T[]> {
     return new Promise<T[]>((resolve, reject) => {
@@ -31,29 +31,25 @@ export class ImportCSVComponent {
       reader.readAsText(f);
     });
   }
-  importSubjects(files: FileList) {
-    this.parse<Subject>(files, xs => {
-      return {
-        id: +xs[0],
-        name: xs[1],
-        source: xs[2],
-        destination: xs[3],
-        revoked: false
-      };
-    }).then(x => this.service.putSubjects(x)).then(() => this.result = 'Done.');
+  importSubjects(target: EventTarget) {
+    this.parse<Subject>((<HTMLInputElement>target).files!, xs => ({
+      id: +xs[0],
+      name: xs[1],
+      source: xs[2],
+      destination: xs[3],
+      revoked: false
+    })).then(x => this.service.putSubjects(x)).then(() => this.result = 'Done.');
   }
-  importItems(files: FileList) {
-    this.parse<{date: Date, item: Item}>(files, xs => {
-      return {
-        date: new Date(xs[1]),
-        item: {
-          source: +xs[2],
-          destination: +xs[3],
-          amount: parseFloat(xs[4]),
-          description: `${xs[5]} ${xs[6]}`.trim()
-        }
-      };
-    }).then(x => {
+  importItems(target: EventTarget) {
+    this.parse<{date: Date, item: Item}>((<HTMLInputElement>target).files!, xs => ({
+      date: new Date(xs[1]),
+      item: {
+        source: +xs[2],
+        destination: +xs[3],
+        amount: parseFloat(xs[4]),
+        description: `${xs[5]} ${xs[6]}`.trim()
+      }
+    })).then(x => {
       const items: {[date: string]: Item[]} = {};
       const dates: Date[] = [];
       x.forEach(x => {

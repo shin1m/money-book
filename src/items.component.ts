@@ -6,73 +6,63 @@ import {
   Input,
   OnInit,
   Output,
-  QueryList,
-  ViewChild,
-  ViewChildren
+  ViewChild
 } from '@angular/core';
-import {ActivatedRoute, Router} from '@angular/router';
-import {Observable} from 'rxjs/Observable';
-import {Subscription} from 'rxjs/Subscription';
-import {Subject as RxSubject} from 'rxjs/Subject';
-import 'rxjs/add/observable/fromEvent';
-import 'rxjs/add/observable/fromPromise';
-import 'rxjs/add/operator/debounceTime';
-import 'rxjs/add/operator/distinctUntilChanged';
-import 'rxjs/add/operator/switchMap';
-import {MdSelect, MdSnackBar} from '@angular/material';
-import {IMyOptions, IMyDate, IMyDateModel} from 'mydatepicker';
-import {Subject, sortSubjects, Item, MoneyBookService} from './money-book.service';
-import {CanComponentDeactivate} from './can-deactivate-guard.service';
-import {MessageComponent} from './message.component';
+import { ActivatedRoute, Router } from '@angular/router';
+import {
+  Subject as RxSubject,
+  fromEvent,
+  debounceTime,
+  distinctUntilChanged,
+  filter,
+  map
+} from 'rxjs';
+import { MatOption } from '@angular/material/core';
+import { MatSelect } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subject, sortSubjects, Item, MoneyBookService } from './money-book.service';
+import { CanComponentDeactivate } from './can-deactivate-guard.service';
 
 @Component({
   selector: 'mb-select-subject',
   template: `
-    <md-select [ngModel]="selected" (ngModelChange)="select($event)" (onClose) ="commit.emit()">
-      <md-option *ngFor="let subject of subjects" [value]="subject.id">
-        {{subject[mnemonic]}} {{subject.name}}
-      </md-option>
-    </md-select>
+    <mat-form-field>
+      <mat-select [ngModel]="selected" (ngModelChange)="select($event)" (openedChange)="opened($event)">
+        <mat-option *ngFor="let subject of subjects" [value]="subject.id">
+          {{subject[mnemonic]}} {{subject.name}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
   `
 })
 export class SelectSubjectComponent implements OnInit {
-  @ViewChild(MdSelect) mdSelect: MdSelect;
-  @Input() subjects: Subject[];
-  @Input() mnemonic: string;
-  @Input() selected: number;
+  @ViewChild(MatSelect) matSelect!: MatSelect;
+  @Input() subjects!: Subject[];
+  @Input() mnemonic!: keyof Subject;
+  @Input() selected!: number;
   @Output() selectedChange = new EventEmitter<number>();
   @Output() commit = new EventEmitter<void>();
-  private keydowns: Subscription;
-  private find(key: string) {
-    key = key.toLowerCase();
-    return this.mdSelect.options.find(x => x.viewValue.toLowerCase().startsWith(key));
-  }
   constructor(private element: ElementRef) {}
   ngOnInit() {
-    Observable.fromEvent(this.element.nativeElement, 'keydown', true).subscribe((x: KeyboardEvent) => {
-      if (x.key === 'Enter') {
+    fromEvent<KeyboardEvent>(this.element.nativeElement, 'keydown', {capture: true}).subscribe(x => {
+      if (x.key === 'Enter' && !this.matSelect.panelOpen) {
         x.stopPropagation();
         this.commit.emit();
       } else {
-        const option = this.find(x.key);
-        if (option) option.select();
-        this.select(this.mdSelect.selected.value);
+        const key = x.key.toLowerCase();
+        this.matSelect.options.find(x => x.viewValue.toLowerCase().startsWith(key))?.select();
       }
     });
-    this.mdSelect.overlayDir.attach.subscribe(() => {
-      this.keydowns = Observable.fromEvent(this.mdSelect.overlayDir.overlayRef.overlayElement, 'keydown').subscribe((x: KeyboardEvent) => {
-        const option = this.find(x.key);
-        if (option) option.focus();
-      });
-    });
-    this.mdSelect.overlayDir.detach.subscribe(() => this.keydowns.unsubscribe());
+  }
+  opened(value: boolean) {
+    if (!value) this.focus();
   }
   select(value: number) {
     this.selected = value;
     this.selectedChange.emit(value);
   }
   focus() {
-    this.mdSelect.close();
+    return this.matSelect.focus();
   }
 }
 
@@ -83,13 +73,9 @@ function toYYYYMMDD(x: Date) {
 
 @Component({
   template: `
-    <mb-message name="confirm" i18n>Are you sure you want to discard changes?</mb-message>
-    <mb-message name="saved" i18n>Saved</mb-message>
-    <mb-message name="failed" i18n>Failed</mb-message>
-    <mb-message name="close" i18n>Close</mb-message>
     <div class="centerable">
       <ng-container *ngIf="subjects">
-        <my-date-picker [options]="myDatePickerOptions" i18n-locale locale="en" [selDate]="myDate" (dateChanged)="onDateChanged($event)"></my-date-picker>
+        <mat-calendar [selected]="date" (selectedChange)="changeDate($event)" [startAt]="date"></mat-calendar>
         <table>
           <tr>
             <td colspan="3">
@@ -100,22 +86,22 @@ function toYYYYMMDD(x: Date) {
                     <mb-select-subject [subjects]="sources" mnemonic="source" [(selected)]="source"></mb-select-subject>
                   </td>
                   <td>
-                    <md-chip-list>
-                      <md-chip *ngFor="let summary of summaries" [selected]="summary.subject.id === source">
+                    <mat-chip-listbox>
+                      <mat-chip-option *ngFor="let summary of summaries; trackBy: bySubject" [highlighted]="summary.subject.id === source" selectable="false">
                         {{summary.subject.name}} {{summary.count}}
-                      </md-chip>
-                    </md-chip-list>
+                      </mat-chip-option>
+                    </mat-chip-listbox>
                   </td>
                 </tr>
               </table>
             </td>
             <td>
               <span class="app-toolbar-filler"></span>
-              <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
-                <md-icon>done</md-icon>
+              <button mat-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-matTooltip matTooltip="Save">
+                <mat-icon>done</mat-icon>
               </button>
-              <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
-                <md-icon>close</md-icon>
+              <button mat-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-matTooltip matTooltip="Discard">
+                <mat-icon>close</mat-icon>
               </button>
             </td>
           </tr>
@@ -130,19 +116,19 @@ function toYYYYMMDD(x: Date) {
               <mb-select-subject [subjects]="destinations" mnemonic="destination" [(selected)]="item.destination"></mb-select-subject>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="item.amount" type="number" required class="amount" #amount="ngModel">
-                <div [hidden]="!amount.invalid" class="error" i18n>Required</div>
-              </md-input-container>
+              <mat-form-field class="amount">
+                <input matInput [(ngModel)]="item.amount" type="number" required #amount="ngModel">
+                <mat-error *ngIf="amount.invalid" i18n>Required</mat-error>
+              </mat-form-field>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="item.description">
-              </md-input-container>
+              <mat-form-field>
+                <input matInput [(ngModel)]="item.description">
+              </mat-form-field>
             </td>
             <td>
-              <button *ngIf="item.source" md-icon-button (click)="remove(item)" i18n-mdTooltip mdTooltip="Delete this item">
-                <md-icon>delete</md-icon>
+              <button *ngIf="item.source" mat-icon-button (click)="remove(item)" i18n-matTooltip matTooltip="Delete this item">
+                <mat-icon>delete</mat-icon>
               </button>
             </td>
           </tr>
@@ -151,30 +137,33 @@ function toYYYYMMDD(x: Date) {
               <mb-select-subject [subjects]="destinations" mnemonic="destination" [(selected)]="newItem.destination" (commit)="newDestinationCommit()" #newDestination></mb-select-subject>
             </td>
             <td (keydown)="newAmountKeydown($event.key)">
-              <md-input-container>
-                <input mdInput [(ngModel)]="newItem.amount" type="number" required i18n-placeholder placeholder="New" class="amount" #amount="ngModel" #newAmount>
-              </md-input-container>
+              <mat-form-field class="amount">
+                <mat-label i18n>New</mat-label>
+                <input matInput [(ngModel)]="newItem.amount" type="number" required #amount="ngModel" #newAmount>
+                <mat-error *ngIf="amount.invalid" i18n>Required</mat-error>
+              </mat-form-field>
             </td>
             <td (keydown)="newDescriptionKeydown($event.key)">
-              <md-input-container>
-                <input mdInput [(ngModel)]="newItem.description" #newDescription>
-              </md-input-container>
+              <mat-form-field>
+                <input matInput [(ngModel)]="newItem.description" #newDescription>
+              </mat-form-field>
             </td>
             <td>
-              <button md-icon-button [disabled]="amount.invalid" (click)="add()" i18n-mdTooltip mdTooltip="Add new item">
-                <md-icon>add</md-icon>
+              <button mat-icon-button [disabled]="amount.invalid" (click)="add()" i18n-matTooltip matTooltip="Add new item">
+                <mat-icon>add</mat-icon>
               </button>
             </td>
           </tr>
         </table>
       </ng-container>
-      <md-spinner *ngIf="waiting" class="center"></md-spinner>
+      <mat-spinner *ngIf="waiting" class="center"></mat-spinner>
     </div>
   `,
   styles: [`
-    my-date-picker {
+    mat-calendar {
       float: left;
       margin: 1em;
+      width: 14em;
     }
     table.source {
       padding-top: 2em;
@@ -184,152 +173,121 @@ function toYYYYMMDD(x: Date) {
       padding-left: 1em;
       padding-right: 1em;
     }
-    input.amount {
-      width: 4em;
+    .amount {
+      width: 8em;
+    }
+    .amount input {
       text-align: right;
     }
   `]
 })
 export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
-  private messages: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.messages[x.name] = x.value);
-  }
-  @ViewChild('newDestination') newDestination: SelectSubjectComponent;
-  @ViewChild('newAmount') newAmount: ElementRef;
-  @ViewChild('newDescription') newDescription: ElementRef;
+  @ViewChild('newDestination') newDestination!: SelectSubjectComponent;
+  @ViewChild('newAmount') newAmount!: ElementRef;
+  @ViewChild('newDescription') newDescription!: ElementRef;
   waiting = true;
-  subjects: {[id: number]: Subject};
+  subjects?: {[id: number]: Subject};
   sources: Subject[] = [];
-  destinations: Subject[];
-  private _date = new Date();
-  private targetDates = new RxSubject<number>();
+  destinations!: Subject[];
+  date!: Date;
   items: Item[] = [];
   private original = '[]';
-  newItem = new Item();
-  source: number;
-  itemsOfSource: Item[];
-  summaries: {subject: Subject, count: number}[];
-  modified: boolean;
-  invalid: boolean;
-  private modifieds = new RxSubject<boolean>();
-  private myDatePickerOptions: IMyOptions = {
-    firstDayOfWeek: 'su',
-    inline: true
-  };
+  newItem: {destination: number, amount?: number, description: string} = {destination: 0, description: ''};
+  source!: number;
+  itemsOfSource?: Item[];
+  summaries?: {subject: Subject, count: number}[];
+  modified = false;
+  invalid = false;
+  private jsons = new RxSubject<string>();
   constructor(
     private service: MoneyBookService,
     private route: ActivatedRoute,
     private router: Router,
-    private snackBar: MdSnackBar
-  ) {
-    this._date.setHours(0, 0, 0, 0);
-    this.setMyDate();
-  }
+    private snackBar: MatSnackBar
+  ) {}
   ngOnInit() {
-    const dates = this.route.params.map(params => params['date']);
-    dates.filter(x => !x).subscribe(x => this.router.navigate(['/items', toYYYYMMDD(new Date())], {replaceUrl: true}));
+    const dates = this.route.params.pipe(map(params => params['date']));
+    dates.pipe(filter(x => !x)).subscribe(x => this.router.navigate(['/items', toYYYYMMDD(new Date())], {replaceUrl: true}));
     const subjects = this.service.getSubjects().then(x => {
       this.subjects = [];
-      x.forEach(x => this.subjects[x.id] = x);
+      x.forEach(x => this.subjects![x.id] = x);
       this.sources = sortSubjects(x, 'source');
       this.destinations = sortSubjects(x, 'destination');
-      this.setNewItem();
+      this.resetNewItem();
       this.source = this.sources[0].id;
     });
-    dates.filter(x => x).switchMap(x => {
-      this._date = new Date(x);
-      this.setMyDate();
-      this.waiting = true;
-      return Observable.fromPromise(subjects.then(() => this.service.getItems(this._date)));
-    }).subscribe(x => {
-      this.items = x;
-      this.original = JSON.stringify(this.items);
-      this.waiting = false;
+    dates.pipe(filter(x => x)).subscribe(x => {
+      this.date = new Date(x);
+      subjects.then(() => this.load());
     });
-    this.targetDates.debounceTime(500).distinctUntilChanged().subscribe(x => this.router.navigate(['/items', toYYYYMMDD(new Date(x))]));
-    this.modifieds.debounceTime(3000).filter(x => x).subscribe(x => {
+    this.jsons.pipe(distinctUntilChanged(), debounceTime(3000)).subscribe(x => {
       if (!this.waiting && this.modified && !this.invalid) this.save();
     });
   }
   ngDoCheck() {
     this.itemsOfSource = this.items.filter(x => x.source === this.source);
     this.summaries = this.sources.map(subject => ({
-      subject: subject,
+      subject,
       count: this.items.filter(x => x.source === subject.id).length
     })).filter(x => x.count > 0);
-    this.modified = JSON.stringify(this.items) !== this.original;
+    const json = JSON.stringify(this.items);
+    this.modified = json !== this.original;
     this.invalid = this.items.some(x => typeof x.amount !== 'number') || typeof this.newItem.amount === 'number' || !!this.newItem.description;
-    this.modifieds.next(this.modified);
+    this.jsons.next(json);
   }
   canDeactivate() {
-    return !this.modified || confirm(this.messages['confirm']);
+    return !this.modified || confirm($localize `Are you sure you want to discard changes?`);
   }
-  private setNewItem() {
-    this.newItem = new Item();
+  bySubject(i: number, x: {subject: Subject}) {
+    return x.subject;
+  }
+  private resetNewItem() {
     this.newItem.destination = this.destinations[0].id;
+    this.newItem.amount = undefined;
+    this.newItem.description = '';
   }
   private load() {
     this.waiting = true;
-    this.service.getItems(this._date).then(x => {
+    this.service.getItems(this.date).then(x => {
       this.items = x;
       this.original = JSON.stringify(this.items);
+      this.jsons.next(this.original);
       this.waiting = false;
     });
   }
   save() {
     this.waiting = true;
     const original = JSON.stringify(this.items);
-    this.service.putItems(this._date, this.items).then(() => {
+    this.service.putItems(this.date, this.items).then(() => {
       this.original = original;
-      this.snackBar.open(this.messages['saved'], null, {duration: 1000});
+      this.snackBar.open($localize `Saved`, undefined, {duration: 1000});
     }, x => {
       console.log(x);
-      this.snackBar.open(`${this.messages['failed']}: ${x.message}`, this.messages['close']);
+      this.snackBar.open(`${$localize `Failed`}: ${x.message}`, $localize `Close`);
     }).then(() => this.waiting = false);
   }
   discard() {
     if (this.canDeactivate()) this.load();
   }
-  private myDate: IMyDate = {year: 0, month: 0, day: 0};
-  private setMyDate() {
-    this.myDate.year = this.year;
-    this.myDate.month = this.month;
-    this.myDate.day = this.date;
-  }
-  onDateChanged(event: IMyDateModel) {
-    this.myDate = event.date;
-    this._date = event.jsdate;
-    this.setMyDate();
-    this.targetDates.next(this._date.getTime());
-  }
-  get year() {
-    return this._date.getFullYear();
-  }
-  get month() {
-    return this._date.getMonth() + 1;
-  }
-  get date() {
-    return this._date.getDate();
+  changeDate(value: Date) {
+    this.router.navigate(['/items', toYYYYMMDD(value)]);
   }
   add() {
-    this.newItem.source = this.source;
-    this.items.push(this.newItem);
-    this.setNewItem();
+    const {destination, amount, description} = this.newItem;
+    this.items.push({source: this.source, destination, amount: amount!, description});
+    this.resetNewItem();
+    this.newDestination.focus();
   }
   remove(item: Item) {
     this.items.splice(this.items.indexOf(item), 1);
   }
   newDestinationCommit() {
-    setTimeout(() => this.newAmount.nativeElement.focus(), 0);
+    this.newAmount.nativeElement.focus();
   }
   newAmountKeydown(key: string) {
-    if (typeof this.newItem.amount !== 'number' || key !== 'Enter') return;
-    setTimeout(() => this.newDescription.nativeElement.focus(), 0);
+    if (typeof this.newItem.amount === 'number' && key === 'Enter') this.newDescription.nativeElement.focus();
   }
   newDescriptionKeydown(key: string) {
-    if (typeof this.newItem.amount !== 'number' || key !== 'Enter') return;
-    this.add();
-    setTimeout(() => this.newDestination.focus(), 0);
+    if (typeof this.newItem.amount === 'number' && key === 'Enter') this.add();
   }
 }

@@ -1,29 +1,24 @@
-import {Component, OnInit, QueryList, ViewChildren} from '@angular/core';
-import {MdSnackBar} from '@angular/material';
-import {Subject, MoneyBookService} from './money-book.service';
-import {CanComponentDeactivate} from './can-deactivate-guard.service';
-import {MessageComponent} from './message.component';
+import { Component, OnInit } from '@angular/core';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subject, MoneyBookService } from './money-book.service';
+import { CanComponentDeactivate } from './can-deactivate-guard.service';
 
 @Component({
   template: `
-    <mb-message name="confirm" i18n>Are you sure you want to discard changes?</mb-message>
-    <mb-message name="saved" i18n>Saved</mb-message>
-    <mb-message name="failed" i18n>Failed</mb-message>
-    <mb-message name="close" i18n>Close</mb-message>
     <div class="centerable">
       <ng-container *ngIf="subjects">
         <table>
           <tr>
             <td class="include-revoked" colspan="3">
-              <md-checkbox [(ngModel)]="includeRevoked" i18n>Include Revoked</md-checkbox>
+              <mat-checkbox [(ngModel)]="includeRevoked" i18n>Include Revoked</mat-checkbox>
             </td>
             <td *ngIf="includeRevoked"></td>
             <td>
-              <button md-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-mdTooltip mdTooltip="Save">
-                <md-icon>done</md-icon>
+              <button mat-icon-button *ngIf="modified" [disabled]="waiting || invalid" (click)="save()" i18n-matTooltip matTooltip="Save">
+                <mat-icon>done</mat-icon>
               </button>
-              <button md-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-mdTooltip mdTooltip="Discard">
-                <md-icon>close</md-icon>
+              <button mat-icon-button *ngIf="modified" [disabled]="waiting" (click)="discard()" i18n-matTooltip matTooltip="Discard">
+                <mat-icon>close</mat-icon>
               </button>
             </td>
           </tr>
@@ -41,87 +36,85 @@ import {MessageComponent} from './message.component';
           <tr *ngFor="let subject of getSubjects(); let index = index; let first = first; let last = last">
             <!-- <td>{{subject.id}}</td> -->
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="subject.name" required #name="ngModel">
-                <div [hidden]="!name.invalid" class="error" i18n>Required</div>
-              </md-input-container>
+              <mat-form-field>
+                <input matInput [(ngModel)]="subject.name" required #name="ngModel">
+                <mat-error *ngIf="name.invalid" i18n>Required</mat-error>
+              </mat-form-field>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="subject.source" class="mnemonic">
-              </md-input-container>
+              <mat-form-field class="mnemonic">
+                <input matInput [(ngModel)]="subject.source">
+              </mat-form-field>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="subject.destination" class="mnemonic">
-              </md-input-container>
+              <mat-form-field class="mnemonic">
+                <input matInput [(ngModel)]="subject.destination">
+              </mat-form-field>
             </td>
             <td *ngIf="includeRevoked">
-              <md-checkbox [(ngModel)]="subject.revoked"></md-checkbox>
+              <mat-checkbox [(ngModel)]="subject.revoked"></mat-checkbox>
             </td>
             <td>
-              <button md-icon-button [disabled]="first" (click)="moveUp(subject)" i18n-mdTooltip mdTooltip="Move upward">
-                <md-icon>arrow_upward</md-icon>
+              <button mat-icon-button [disabled]="first" (click)="moveUp(subject)" i18n-matTooltip matTooltip="Move upward">
+                <mat-icon>arrow_upward</mat-icon>
               </button>
-              <button md-icon-button [disabled]="last" (click)="moveDown(subject)" i18n-mdTooltip mdTooltip="Move downward">
-                <md-icon>arrow_downward</md-icon>
+              <button mat-icon-button [disabled]="last" (click)="moveDown(subject)" i18n-matTooltip matTooltip="Move downward">
+                <mat-icon>arrow_downward</mat-icon>
               </button>
             </td>
           </tr>
           <tr>
             <!-- <td>New</td> -->
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="newSubject.name" required i18n-placeholder placeholder="New" #name="ngModel">
-              </md-input-container>
+              <mat-form-field>
+                <mat-label i18n>New</mat-label>
+                <input matInput [(ngModel)]="newSubject.name" required #name="ngModel">
+                <mat-error *ngIf="name.invalid" i18n>Required</mat-error>
+              </mat-form-field>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="newSubject.source" class="mnemonic">
-              </md-input-container>
+              <mat-form-field class="mnemonic">
+                <input matInput [(ngModel)]="newSubject.source">
+              </mat-form-field>
             </td>
             <td>
-              <md-input-container>
-                <input mdInput [(ngModel)]="newSubject.destination" class="mnemonic">
-              </md-input-container>
+              <mat-form-field class="mnemonic">
+                <input matInput [(ngModel)]="newSubject.destination">
+              </mat-form-field>
             </td>
             <td *ngIf="includeRevoked"></td>
             <td>
-              <button md-icon-button [disabled]="name.invalid" (click)="add()" i18n-mdTooltip mdTooltip="Add new subject">
-                <md-icon>add</md-icon>
+              <button mat-icon-button [disabled]="name.invalid" (click)="add()" i18n-matTooltip matTooltip="Add new subject">
+                <mat-icon>add</mat-icon>
               </button>
             </td>
           </tr>
         </table>
       </ng-container>
-      <md-spinner *ngIf="waiting" class="center"></md-spinner>
+      <mat-spinner *ngIf="waiting" class="center"></mat-spinner>
     </div>
   `,
   styles: [`
     .include-revoked {
       height: 3em;
     }
-    input.mnemonic {
-      width: 2em;
+    .mnemonic {
+      width: 3em;
     }
   `]
 })
 export class SubjectsComponent implements OnInit, CanComponentDeactivate {
-  private messages: {[name: string]: string} = {};
-  @ViewChildren(MessageComponent) set messageComponents(values: QueryList<MessageComponent>) {
-    values.forEach(x => this.messages[x.name] = x.value);
-  }
-  waiting: boolean;
-  subjects: Subject[];
-  private original: string;
+  waiting = false;
+  subjects!: Subject[];
+  private original!: string;
   includeRevoked = false;
   newSubject = new Subject();
-  constructor(private service: MoneyBookService, private snackBar: MdSnackBar) {}
+  constructor(private service: MoneyBookService, private snackBar: MatSnackBar) {}
   ngOnInit() {
     this.load();
   }
   canDeactivate() {
-    return !this.modified || confirm(this.messages['confirm']);
+    return !this.modified || confirm($localize `Are you sure you want to discard changes?`);
   }
   get modified() {
     return JSON.stringify(this.subjects) !== this.original;
@@ -142,10 +135,10 @@ export class SubjectsComponent implements OnInit, CanComponentDeactivate {
     const original = JSON.stringify(this.subjects);
     this.service.putSubjects(this.subjects).then(() => {
       this.original = original;
-      this.snackBar.open(this.messages['saved'], null, {duration: 1000});
+      this.snackBar.open($localize `Saved`, undefined, {duration: 1000});
     }, x => {
       console.log(x);
-      this.snackBar.open(`${this.messages['failed']}: ${x.message}`, this.messages['close']);
+      this.snackBar.open(`${$localize `Failed`}: ${x.message}`, $localize `Close`);
     }).then(() => this.waiting = false);
   }
   discard() {

@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xliff version="1.2" xmlns="urn:oasis:names:tc:xliff:document:1.2">
+  <file source-language="en" datatype="plaintext" original="ng2.template">
+    <body>
+      <trans-unit id="935790816200474922" datatype="html">
+        <source>Sign Out</source>
+        <target>サインアウト</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">99</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="840692109692540367" datatype="html">
+        <source>Sign In</source>
+        <target>サインイン</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">104</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6570363013146073520" datatype="html">
+        <source>Dashboard</source>
+        <target>ダッシュボード</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">124</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6162691442834560200" datatype="html">
+        <source>Items</source>
+        <target>項目入力</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">125</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5972502836680454671" datatype="html">
+        <source>Subjects</source>
+        <target>費目一覧</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">126</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1996745202538723130" datatype="html">
+        <source>Import CSV</source>
+        <target>CSVをインポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">127</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5158177792461436439" datatype="html">
+        <source>Export CSV</source>
+        <target>CSVへエクスポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/app.ts</context>
+          <context context-type="linenumber">128</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3757265847791126294" datatype="html">
+        <source>Select Subjects</source>
+        <target>費目の選択</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">21</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5203279511751768967" datatype="html">
+        <source>From</source>
+        <target>元</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">24</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">353</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6252070156626006029" datatype="html">
+        <source>None</source>
+        <target>なし</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">25</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1616102757855967475" datatype="html">
+        <source>All</source>
+        <target>すべて</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">26</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1640609344969975994" datatype="html">
+        <source>To</source>
+        <target>先</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">32</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">354</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8586908745456864217" datatype="html">
+        <source>Previous month</source>
+        <target>前月</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">133</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3628374603023447227" datatype="html">
+        <source>Next month</source>
+        <target>翌月</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">142</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1163431679935354986" datatype="html">
+        <source>Monthly Totals</source>
+        <target>月別集計</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">145</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="2595495483779907512" datatype="html">
+        <source>Daily Totals in</source>
+        <target>日別集計:</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">147</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4930506384627295710" datatype="html">
+        <source>Settings</source>
+        <target>設定</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">149</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1211004682678402939" datatype="html">
+        <source>Back to Monthly Totals</source>
+        <target>月別集計に戻る</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/dashboard.component.ts</context>
+          <context context-type="linenumber">268</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3039437381806888633" datatype="html">
+        <source>Export Subjects</source>
+        <target>費目をエクポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/exportcsv.component.ts</context>
+          <context context-type="linenumber">9</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3768927257183755959" datatype="html">
+        <source>Save</source>
+        <target>保存</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/exportcsv.component.ts</context>
+          <context context-type="linenumber">10</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/exportcsv.component.ts</context>
+          <context context-type="linenumber">14</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">100</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">17</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3071432807170113385" datatype="html">
+        <source>Export Items</source>
+        <target>項目をエクスポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/exportcsv.component.ts</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6559164293956761972" datatype="html">
+        <source>Import Subjects</source>
+        <target>費目をインポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/importcsv.component.ts</context>
+          <context context-type="linenumber">8</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1351344403546996322" datatype="html">
+        <source>Import Items</source>
+        <target>項目をインポート</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/importcsv.component.ts</context>
+          <context context-type="linenumber">12</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="9155608366859514313" datatype="html">
+        <source>Source</source>
+        <target>元</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">84</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3823219296477075982" datatype="html">
+        <source>Discard</source>
+        <target>破棄</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">103</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">20</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1866048779551574162" datatype="html">
+        <source>Destination</source>
+        <target>先</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">109</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6533918067030990396" datatype="html">
+        <source>Amount</source>
+        <target>金額</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">110</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4902817035128594900" datatype="html">
+        <source>Description</source>
+        <target>説明</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">111</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7045123878111147511" datatype="html">
+        <source>Required</source>
+        <target>必須</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">121</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">143</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">41</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">72</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1069107129309456759" datatype="html">
+        <source>Delete this item</source>
+        <target>この項目を削除</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">130</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5280218112746407598" datatype="html">
+        <source>New</source>
+        <target>新規</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">141</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">70</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3901785231622498080" datatype="html">
+        <source>Add new item</source>
+        <target>新しい項目を追加</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">152</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="3759991087342240080" datatype="html">
+        <source>Are you sure you want to discard changes?</source>
+        <target>変更を破棄します。よろしいですか?</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">239</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">117</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6333335057236774263" datatype="html">
+        <source>Saved</source>
+        <target>保存しました。</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">263</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">138</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7256395947475975935" datatype="html">
+        <source>Failed</source>
+        <target>失敗しました。</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">266</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7819314041543176992" datatype="html">
+        <source>Close</source>
+        <target>閉じる</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/items.component.ts</context>
+          <context context-type="linenumber">266</context>
+        </context-group>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">141</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="4072659946035747561" datatype="html">
+        <source>Include Revoked</source>
+        <target>破棄済を含める</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">13</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8953033926734869941" datatype="html">
+        <source>Name</source>
+        <target>名称</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">27</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6539299827195047569" datatype="html">
+        <source>Mnemonic</source>
+        <target>略号</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">28</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7096440230985171865" datatype="html">
+        <source>Revoked</source>
+        <target>破棄済</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">29</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="5712678727850234078" datatype="html">
+        <source>Src</source>
+        <target>元</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">33</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="7209228446240435960" datatype="html">
+        <source>Dst</source>
+        <target>先</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">34</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="6592761076802672550" datatype="html">
+        <source>Move upward</source>
+        <target>上へ移動</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">58</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="1463916943759389128" datatype="html">
+        <source>Move downward</source>
+        <target>下へ移動</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">61</context>
+        </context-group>
+      </trans-unit>
+      <trans-unit id="8834869486742367087" datatype="html">
+        <source>Add new subject</source>
+        <target>新しい費目を追加</target>
+        <context-group purpose="location">
+          <context context-type="sourcefile">src/subjects.component.ts</context>
+          <context context-type="linenumber">87</context>
+        </context-group>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

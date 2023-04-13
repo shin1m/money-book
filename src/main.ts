@@ -1,8 +1,9 @@
-import {NgModule} from '@angular/core';
-import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
-import {getTranslationProviders} from './i18n-providers';
-import {MoneyBookService, TestMoneyBookService} from './money-book.service';
-import {AppComponent, AppModule} from './app';
+/// <reference types="@angular/localize" />
+
+import { NgModule } from '@angular/core';
+import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
+import { MoneyBookService, TestMoneyBookService } from './money-book.service';
+import { AppComponent, AppModule } from './app';
 
 @NgModule({
   imports: [AppModule],
@@ -11,4 +12,6 @@ import {AppComponent, AppModule} from './app';
 })
 class TestModule {}
 
-getTranslationProviders().then(x => platformBrowserDynamic().bootstrapModule(TestModule, {providers: x}));
+//platformBrowserDynamic().bootstrapModule(TestModule)
+platformBrowserDynamic().bootstrapModule(AppModule)
+  .catch(err => console.error(err));
