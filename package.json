@@ -5,6 +5,7 @@
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
+    "github": "ng build --output-path docs --base-href /money-book/ --localize && cp github/*.html docs",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
