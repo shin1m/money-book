@@ -160,35 +160,52 @@ export class GoogleDriveMoneyBookService extends MoneyBookService {
     }).then(() => {
       this.tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/drive.appdata',
-        callback: (response: any) => this.isSignedInChanged(gapi.client.getToken() !== null)
+        scope: 'https://www.googleapis.com/auth/drive.appdata'
       });
-      this.isSignedInChanged(gapi.client.getToken() !== null);
+      try {
+        const token = JSON.parse(sessionStorage['token']);
+        gapi.client.setToken(token);
+        this.zone.run(() => this.isSignedIn.next(token !== null));
+      } catch {
+        this.zone.run(() => this.isSignedIn.next(false));
+      }
     })));
   }
   signIn() {
-    this.zone.runOutsideAngular(() => this.tokenClient.requestAccessToken());
+    this.zone.runOutsideAngular(() => this.requestAccessToken());
   }
   signOut() {
     this.zone.runOutsideAngular(() => {
       const token = gapi.client.getToken();
       if (!token) return;
       google.accounts.oauth2.revoke(token.access_token);
-      gapi.client.setToken(null);
-      this.isSignedInChanged(false);
+      this.signedOut();
     });
   }
-  private isSignedInChanged(value: boolean) {
-    this.zone.run(() => this.isSignedIn.next(value));
+  private signedOut() {
+    gapi.client.setToken(null);
+    delete sessionStorage['token'];
+    this.zone.run(() => this.isSignedIn.next(false));
+  }
+  private requestAccessToken() {
+    return new Promise<void>((resolve, reject) => {
+      this.tokenClient.callback = (response: any) => {
+        this.tokenClient.callback = this.tokenClient.error_callback = undefined;
+        const token = gapi.client.getToken();
+        sessionStorage['token'] = JSON.stringify(token);
+        this.zone.run(() => this.isSignedIn.next(token !== null));
+        resolve();
+      };
+      this.tokenClient.error_callback = (response: any) => {
+        this.tokenClient.callback = this.tokenClient.error_callback = undefined;
+        this.signedOut();
+        reject(response);
+      };
+      this.tokenClient.requestAccessToken();
+    });
   }
   private tryOrBackoff<T>(action: () => Promise<T>, delay: number): Promise<T> {
-    return tryOrBackoff(action, delay).then(undefined, x => x.result.error.code === 401 || x.result.error.code === 403 && x.result.error.status === 'PERMISSION_DENIED' ? new Promise<void>(resolve => {
-      this.tokenClient.callback = (response: any) => {
-        this.isSignedInChanged(gapi.client.getToken() !== null);
-        resolve();
-      }
-      this.tokenClient.requestAccessToken();
-    }).then(() => tryOrBackoff(action, delay)) : Promise.reject(x));
+    return tryOrBackoff(action, delay).catch(x => x.result.error.code === 401 || x.result.error.code === 403 && x.result.error.status === 'PERMISSION_DENIED' ? this.requestAccessToken().then(() => tryOrBackoff(action, delay)) : Promise.reject(x));
   }
   private getJSONByName(name: string) {
     return this.tryOrBackoff(() => (<any>gapi.client).drive.files.list({

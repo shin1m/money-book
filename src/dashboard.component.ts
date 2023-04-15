@@ -307,7 +307,7 @@ export class DashboardComponent implements OnInit {
           items: x,
           drilldown: xs[1]
         }));
-      }));
+      }).finally(() => this.waiting = false));
     })).subscribe((x: {
       months?: Date[],
       items?: Item[][][],
@@ -318,7 +318,6 @@ export class DashboardComponent implements OnInit {
         this.categories = this.months.map(toYYYYMM);
         this.items = x.items!;
         this.draw();
-        this.waiting = false;
       }
       if (x.drilldown) {
         const drilldown = +x.drilldown;

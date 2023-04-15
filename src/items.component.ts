@@ -215,7 +215,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
       this.destinations = sortSubjects(x, 'destination');
       this.resetNewItem();
       this.source = this.sources[0].id;
-    });
+    }, () => this.waiting = false);
     dates.pipe(filter(x => x)).subscribe(x => {
       this.date = new Date(x);
       subjects.then(() => this.load());
@@ -252,8 +252,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
       this.items = x;
       this.original = JSON.stringify(this.items);
       this.jsons.next(this.original);
-      this.waiting = false;
-    });
+    }).finally(() => this.waiting = false);
   }
   save() {
     this.waiting = true;
@@ -264,7 +263,7 @@ export class ItemsComponent implements OnInit, DoCheck, CanComponentDeactivate {
     }, x => {
       console.log(x);
       this.snackBar.open(`${$localize `Failed`}: ${x.message}`, $localize `Close`);
-    }).then(() => this.waiting = false);
+    }).finally(() => this.waiting = false);
   }
   discard() {
     if (this.canDeactivate()) this.load();

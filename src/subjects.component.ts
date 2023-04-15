@@ -127,8 +127,7 @@ export class SubjectsComponent implements OnInit, CanComponentDeactivate {
     this.service.getSubjects().then(x => {
       this.subjects = x;
       this.original = JSON.stringify(x);
-      this.waiting = false;
-    });
+    }).finally(() => this.waiting = false);
   }
   save() {
     this.waiting = true;
@@ -139,7 +138,7 @@ export class SubjectsComponent implements OnInit, CanComponentDeactivate {
     }, x => {
       console.log(x);
       this.snackBar.open(`${$localize `Failed`}: ${x.message}`, $localize `Close`);
-    }).then(() => this.waiting = false);
+    }).finally(() => this.waiting = false);
   }
   discard() {
     if (this.canDeactivate()) this.load();

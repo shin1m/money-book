@@ -39,8 +39,7 @@ export class ExportCSVComponent implements OnDestroy {
           x.map(x => `${x.id},${x.name},${x.source},${x.destination}\n`).join('')
         ], {type: 'text/csv'}))
       );
-      this.waiting = false;
-    });
+    }).finally(() => this.waiting = false);
   }
   exportItems() {
     this.waiting = true;
@@ -60,7 +59,6 @@ export class ExportCSVComponent implements OnDestroy {
           items.join('')
         ], {type: 'text/csv'}))
       );
-      this.waiting = false;
-    });
+    }).finally(() => this.waiting = false);
   }
 }

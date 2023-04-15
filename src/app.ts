@@ -36,6 +36,7 @@ import { SelectSubjectsDialog, DashboardComponent } from './dashboard.component'
 import { ImportCSVComponent } from './importcsv.component';
 import { ExportCSVComponent } from './exportcsv.component';
 
+@Injectable()
 class CustomDateAdapter extends NativeDateAdapter {
   override getDateNames() {
     return Array.from(Array(31).keys(), i => `${i + 1}`);
